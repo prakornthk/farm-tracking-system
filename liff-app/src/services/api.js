@@ -5,6 +5,7 @@ const API_BASE = typeof envApiBase === 'string' && envApiBase.startsWith('/api')
 const DEBUG_ENDPOINT = 'http://localhost:7352/ingest/67de65b0-b786-4529-b216-6d987234dbf1'
 const DEBUG_SESSION_ID = 'f86896'
 const AUTH_TOKEN_KEY = 'liff_auth_token'
+const DEMO_MODE_KEY = 'liff_demo_mode'
 
 const debugLog = (payload) => {
   fetch(DEBUG_ENDPOINT, {
@@ -41,15 +42,23 @@ export const setAuthToken = (token) => {
   }
 }
 
-// Demo mode flag — when true, app bypasses real backend auth
-let _demoMode = false
-export const isDemoMode = () => _demoMode
-export const setDemoMode = (value) => { _demoMode = Boolean(value) }
+export const setDemoMode = (enabled) => {
+  if (enabled) {
+    localStorage.setItem(DEMO_MODE_KEY, '1')
+  } else {
+    localStorage.removeItem(DEMO_MODE_KEY)
+  }
+}
+
+export const isDemoMode = () => localStorage.getItem(DEMO_MODE_KEY) === '1'
 
 // Response interceptor for offline handling
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (isDemoMode()) {
+      return Promise.reject({ offline: true, message: 'DEMO_MODE' })
+    }
     // #region agent log
     debugLog({
       hypothesisId: 'H2',
@@ -105,6 +114,7 @@ export const loginWithLineAccessToken = async (accessToken) => {
   const token = res?.data?.data?.token || null
   if (token) {
     setAuthToken(token)
+    setDemoMode(false)
   }
   // #region agent log
   debugLog({
