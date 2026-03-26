@@ -6,6 +6,7 @@ const ACTION_CONFIG = {
   prune:     { icon: '✂️', label: 'ตัดแต่ง',      color: '#8b5cf6' },
   inspect:   { icon: '🔍', label: 'ตรวจสอบ',     color: '#f59e0b' },
   harvest:   { icon: '🍎', label: 'เก็บเกี่ยว',   color: '#ef4444' },
+  spraying:  { icon: '🔬', label: 'พ่นยา',       color: '#10b981' },
   report:    { icon: '⚠️', label: 'แจ้งปัญหา',   color: '#ef4444' }
 }
 

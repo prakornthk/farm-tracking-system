@@ -81,8 +81,15 @@ function App() {
                 }
               />
 
-              {/* Tasks - all roles */}
-              <Route path="/tasks" element={<Tasks />} />
+              {/* Tasks - owner, manager only (workers cannot create/assign tasks) */}
+              <Route
+                path="/tasks"
+                element={
+                  <ProtectedRoute roles={['owner', 'manager']}>
+                    <Tasks />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Problems - all roles */}
               <Route path="/problems" element={<Problems />} />

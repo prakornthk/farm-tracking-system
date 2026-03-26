@@ -97,6 +97,7 @@ const ScanPage = ({ type, id, onSelectAction }) => {
           <ActionButton action="water"     onClick={onSelectAction} />
           <ActionButton action="fertilize" onClick={onSelectAction} />
           <ActionButton action="prune"     onClick={onSelectAction} />
+          <ActionButton action="spraying"  onClick={onSelectAction} />
           <ActionButton action="inspect"   onClick={onSelectAction} />
           <ActionButton action="harvest"   onClick={onSelectAction} />
           <ActionButton action="report"    onClick={onSelectAction} />

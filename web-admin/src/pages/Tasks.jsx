@@ -11,6 +11,12 @@ const STATUS_COLORS = {
   completed: 'badge badge-success',
 };
 
+const ROLE_LABELS = {
+  owner: 'เจ้าของ',
+  manager: 'ผู้จัดการ',
+  worker: 'พนักงาน',
+};
+
 export default function Tasks() {
   const { isManager } = useAuth();
   const [filter, setFilter] = useState({ status: '', assigned_to: '' });
@@ -184,11 +190,12 @@ export default function Tasks() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="label">มอบหมายให้</label>
+                  <label className="label">มอบหมายให้ 👑</label>
+                  <p className="text-xs text-gray-400 mb-1.5">เลือกพนักงานที่รับผิดชอบงานนี้</p>
                   <select className="input" value={form.assigned_users[0] || ''}
                     onChange={(e) => setForm({ ...form, assigned_users: e.target.value ? [e.target.value] : [] })}>
-                    <option value="">-- เลือก --</option>
-                    {users.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+                    <option value="">-- เลือกพนักงาน --</option>
+                    {users.map((u) => <option key={u.id} value={u.id}>{u.name} ({ROLE_LABELS[u.role] || u.role})</option>)}
                   </select>
                 </div>
                 <div>

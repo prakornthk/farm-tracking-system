@@ -45,6 +45,7 @@ class Activity extends Model
         'watering',
         'fertilizing',
         'pesticide',
+        'spraying',
         'weeding',
         'pruning',
         'harvesting',
