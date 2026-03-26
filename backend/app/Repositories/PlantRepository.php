@@ -32,7 +32,7 @@ class PlantRepository implements PlantRepositoryInterface
             $q->latest()->limit(10);
         }])
             ->orderBy('planted_date', 'desc')
-            ->paginate($request->input('per_page', 15));
+            ->paginate(min((int) $request->input('per_page', 15), 100));
     }
 
     /**

@@ -33,7 +33,7 @@ class ProblemReportRepository implements ProblemReportRepositoryInterface
         }
 
         return $query->orderBy('created_at', 'desc')
-            ->paginate($request->input('per_page', 15));
+            ->paginate(min((int) $request->input('per_page', 15), 100));
     }
 
     /**
@@ -98,6 +98,6 @@ class ProblemReportRepository implements ProblemReportRepositoryInterface
         }
 
         return $query->orderBy('created_at', 'desc')
-            ->paginate($request->input('per_page', 15));
+            ->paginate(min((int) $request->input('per_page', 15), 100));
     }
 }

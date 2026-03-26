@@ -36,9 +36,7 @@ const App = () => {
   const authSyncRef = useRef(false)
 
   useEffect(() => {
-    // #region agent log
-    fetch('http://localhost:7352/ingest/67de65b0-b786-4529-b216-6d987234dbf1',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f86896'},body:JSON.stringify({sessionId:'f86896',runId:'initial',hypothesisId:'H3',location:'liff-app/src/App.jsx:39',message:'App auth state snapshot',data:{isReady,isLoggedIn,hasProfile:!!profile,profileUserId:profile?.userId||null,liffError:liffError||null},timestamp:Date.now()})}).catch(()=>{})
-    // #endregion
+    // Intentionally empty — auth sync handled below
   }, [isReady, isLoggedIn, profile, liffError])
 
   useEffect(() => {
@@ -47,18 +45,10 @@ const App = () => {
       const accessToken = typeof liff.getAccessToken === 'function' ? liff.getAccessToken() : null
       if (!accessToken) return
       authSyncRef.current = true
-      // #region agent log
-      fetch('http://localhost:7352/ingest/67de65b0-b786-4529-b216-6d987234dbf1',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f86896'},body:JSON.stringify({sessionId:'f86896',runId:'post-fix',hypothesisId:'H6',location:'liff-app/src/App.jsx:53',message:'Trigger backend auth sync',data:{hasAccessToken:!!accessToken},timestamp:Date.now()})}).catch(()=>{})
-      // #endregion
       try {
         await loginWithLineAccessToken(accessToken)
       } catch (e) {
-        if (accessToken === 'mock-access-token' && e?.response?.status === 401) {
-          setDemoMode(true)
-        }
-        // #region agent log
-        fetch('http://localhost:7352/ingest/67de65b0-b786-4529-b216-6d987234dbf1',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f86896'},body:JSON.stringify({sessionId:'f86896',runId:'post-fix',hypothesisId:'H7',location:'liff-app/src/App.jsx:69',message:'Backend auth sync failed',data:{isMockAccessToken:accessToken==='mock-access-token',status:e?.response?.status||null,responseMessage:e?.response?.data?.message||null},timestamp:Date.now()})}).catch(()=>{})
-        // #endregion
+        console.warn('Backend auth sync failed:', e?.response?.data?.message || e.message)
         authSyncRef.current = false
       }
     }

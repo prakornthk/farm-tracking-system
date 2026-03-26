@@ -22,6 +22,17 @@ class ActivityController extends ApiController
      */
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+
+        // If super_admin, show all. Otherwise filter by user's accessible farms.
+        if ($user->role !== 'super_admin') {
+            $farmIds = $user->farms()->pluck('farms.id')->toArray();
+            if (empty($farmIds)) {
+                return $this->paginated(collect([]), 'Activities retrieved successfully');
+            }
+            $request->merge(['accessible_farm_ids' => $farmIds]);
+        }
+
         $activities = $this->activityRepository->getAll($request);
         return $this->paginated($activities, 'Activities retrieved successfully');
     }

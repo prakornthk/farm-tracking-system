@@ -81,7 +81,8 @@ export default function PlotQR() {
       downloadLink.href = pngFile;
       downloadLink.click();
     };
-    img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+      const safeSvg = unescape(encodeURIComponent(svgData));
+      img.src = 'data:image/svg+xml;charset=utf-8,' + safeSvg;
   };
 
   if (loading) return <LoadingSpinner />;

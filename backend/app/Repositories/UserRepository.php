@@ -30,7 +30,7 @@ class UserRepository implements UserRepositoryInterface
 
         return $query->with(['farms'])
             ->orderBy('name')
-            ->paginate($request->input('per_page', 15));
+            ->paginate(min((int) $request->input('per_page', 15), 100));
     }
 
     /**

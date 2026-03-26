@@ -44,9 +44,9 @@ class TaskRepository implements TaskRepositoryInterface
                 ->whereNotIn('status', ['completed', 'cancelled']);
         }
 
-        return $query->orderBy('priority', 'desc')
+        return $query->orderByRaw("FIELD(COALESCE(priority, 'low'), 'urgent', 'high', 'medium', 'low') DESC")
             ->orderBy('due_date')
-            ->paginate($request->input('per_page', 15));
+            ->paginate(min((int) $request->input('per_page', 15), 100));
     }
 
     /**

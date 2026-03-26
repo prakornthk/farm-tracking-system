@@ -34,7 +34,7 @@ class PlotRepository implements PlotRepositoryInterface
 
         return $query->with(['plants'])
             ->orderBy('sort_order')
-            ->paginate($request->input('per_page', 15));
+            ->paginate(min((int) $request->input('per_page', 15), 100));
     }
 
     /**

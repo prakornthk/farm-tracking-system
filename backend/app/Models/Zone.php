@@ -63,8 +63,6 @@ class Zone extends Model
      */
     public function getPlantsCountAttribute(): int
     {
-        return $this->plots->sum(function ($plot) {
-            return $plot->plants()->count();
-        });
+        return Plant::whereHas('plot', fn($q) => $q->where('zone_id', $this->id))->count();
     }
 }

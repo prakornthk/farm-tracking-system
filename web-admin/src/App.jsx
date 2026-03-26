@@ -1,9 +1,9 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
-
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Farms from './pages/Farms';
@@ -15,11 +15,22 @@ import Tasks from './pages/Tasks';
 import Problems from './pages/Problems';
 import Users from './pages/Users';
 
+function AuthEventHandler() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const handleUnauthorized = () => navigate('/login', { replace: true });
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+  }, [navigate]);
+  return null;
+}
+
 function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
         <BrowserRouter>
+          <AuthEventHandler />
           <Routes>
             {/* Public */}
             <Route path="/login" element={<Login />} />
@@ -81,7 +92,7 @@ function App() {
                 }
               />
 
-              {/* Tasks - owner, manager only (workers cannot create/assign tasks) */}
+              {/* Tasks - owner, manager only */}
               <Route
                 path="/tasks"
                 element={

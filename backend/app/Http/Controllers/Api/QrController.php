@@ -155,15 +155,26 @@ class QrController extends ApiController
         }
 
         $type = $qrData['type'];
+        $user = $request->user();
+
+        // Helper to verify farm access
+        $verifyFarmAccess = function (int $farmId) use ($user): bool {
+            if ($user->role === 'super_admin') return true;
+            return \App\Models\Farm::where('id', $farmId)
+                ->whereHas('users', fn($q) => $q->where('users.id', $user->id))
+                ->exists();
+        };
 
         if ($type === 'plot') {
-            // Validate that the referenced plot actually exists and user has farm access
             if (!isset($qrData['plot_id'])) {
                 return $this->error('Missing plot_id in QR data', 400);
             }
             $plot = Plot::with(['zone.farm', 'plants'])->find($qrData['plot_id']);
             if (!$plot) {
                 return $this->error('Plot not found', 404);
+            }
+            if (!$verifyFarmAccess($plot->zone->farm_id)) {
+                return $this->error('Forbidden: You do not have access to this farm', 403);
             }
             return $this->success([
                 'type' => 'plot',
@@ -173,13 +184,15 @@ class QrController extends ApiController
         }
 
         if ($type === 'plant') {
-            // Validate that the referenced plant actually exists
             if (!isset($qrData['plant_id'])) {
                 return $this->error('Missing plant_id in QR data', 400);
             }
             $plant = Plant::with(['plot.zone.farm'])->find($qrData['plant_id']);
             if (!$plant) {
                 return $this->error('Plant not found', 404);
+            }
+            if (!$verifyFarmAccess($plant->plot->zone->farm_id)) {
+                return $this->error('Forbidden: You do not have access to this farm', 403);
             }
             return $this->success([
                 'type' => 'plant',

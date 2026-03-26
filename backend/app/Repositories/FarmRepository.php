@@ -30,7 +30,7 @@ class FarmRepository implements FarmRepositoryInterface
 
         return $query->with(['zones', 'users'])
             ->orderBy('created_at', 'desc')
-            ->paginate($request->input('per_page', 15));
+            ->paginate(min((int) $request->input('per_page', 15), 100));
     }
 
     /**

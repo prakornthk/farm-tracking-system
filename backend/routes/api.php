@@ -28,9 +28,10 @@ Route::get('/health', function () {
 Route::prefix('auth')->middleware('throttle:auth')->group(function () {
     // Username/Password Login
     Route::post('/login', [AuthController::class, 'login']);
-    // Registration (for demo/seeding purposes - restrict in production)
-    Route::post('/register', [AuthController::class, 'register']);
 });
+
+// Registration disabled for security (was publicly accessible)
+// To enable: add Route::post('/register', ...) inside auth:sanctum + role:owner middleware
 
 // QR Code scanning (public for quick lookup)
 Route::post('/qr/scan', [QrController::class, 'scan'])->middleware('auth:sanctum');

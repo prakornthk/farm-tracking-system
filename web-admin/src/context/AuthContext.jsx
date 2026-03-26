@@ -52,6 +52,8 @@ export function AuthProvider({ children }) {
 
   const hasRole = (...roles) => {
     if (!user) return false;
+    // super_admin has access to everything
+    if (user.role === 'super_admin') return true;
     return roles.includes(user.role);
   };
 

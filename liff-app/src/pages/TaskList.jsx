@@ -2,12 +2,6 @@ import React, { useState, useEffect } from 'react'
 import Loading from '../components/Loading'
 import { getTasks, completeTask, addToOfflineQueue } from '../services/api'
 
-const debugLog = (payload) => {
-  // #region agent log
-  fetch('http://localhost:7352/ingest/67de65b0-b786-4529-b216-6d987234dbf1',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f86896'},body:JSON.stringify({sessionId:'f86896',runId:'initial',timestamp:Date.now(),...payload})}).catch(()=>{})
-  // #endregion
-}
-
 const TYPE_ICONS = {
   plant: { icon: '🌿', bg: 'var(--color-primary-bg)' },
   plot:  { icon: '🗺️', bg: 'var(--color-info-bg)' }

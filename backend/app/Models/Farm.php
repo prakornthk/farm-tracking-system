@@ -83,9 +83,7 @@ class Farm extends Model
      */
     public function getPlotsCountAttribute(): int
     {
-        return $this->zones->sum(function ($zone) {
-            return $zone->plots()->count();
-        });
+        return Plot::whereHas('zone', fn($q) => $q->where('farm_id', $this->id))->count();
     }
 
     /**
@@ -93,10 +91,7 @@ class Farm extends Model
      */
     public function getPlantsCountAttribute(): int
     {
-        return $this->zones->sum(function ($zone) {
-            return $zone->plots->sum(function ($plot) {
-                return $plot->plants()->count();
-            });
+        return Plant::whereHas('plot.zone', fn($q) => $q->where('farm_id', $this->id))->count();
         });
     }
 }

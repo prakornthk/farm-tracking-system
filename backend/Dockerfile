@@ -22,14 +22,17 @@ WORKDIR /var/www
 COPY composer.json ./
 
 # Install dependencies (cached until composer files change)
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+# Note: we skip lock file here and run composer update in final stage
+# to match container's PHP version (8.2)
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts \
+    --ignore-platform-reqs || true
 
 # Copy application source
 COPY . /var/www
 
 # Final install & permissions
 RUN mkdir -p /var/www/storage /var/www/bootstrap/cache \
-    && composer install --no-dev --optimize-autoloader --no-interaction \
+    && composer update --no-dev --optimize-autoloader --no-interaction \
     && chown -R 82:82 /var/www \
     && chmod -R 755 /var/www/storage /var/www/bootstrap/cache
 

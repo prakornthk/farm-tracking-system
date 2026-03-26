@@ -1,28 +1,10 @@
 import axios from 'axios'
 
-const envApiBase = import.meta.env.VITE_API_BASE
-const API_BASE = typeof envApiBase === 'string' && envApiBase.startsWith('/api') ? envApiBase : '/api'
-const DEBUG_ENDPOINT = 'http://localhost:7352/ingest/67de65b0-b786-4529-b216-6d987234dbf1'
-const DEBUG_SESSION_ID = 'f86896'
 const AUTH_TOKEN_KEY = 'liff_auth_token'
 const DEMO_MODE_KEY = 'liff_demo_mode'
 
-const debugLog = (payload) => {
-  fetch(DEBUG_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': DEBUG_SESSION_ID },
-    body: JSON.stringify({ sessionId: DEBUG_SESSION_ID, runId: 'initial', timestamp: Date.now(), ...payload })
-  }).catch(() => {})
-}
-
-// #region agent log
-debugLog({
-  hypothesisId: 'H1',
-  location: 'liff-app/src/services/api.js:16',
-  message: 'LIFF API base initialized',
-  data: { apiBase: API_BASE }
-})
-// #endregion
+const envApiBase = import.meta.env.VITE_API_BASE
+const API_BASE = (typeof envApiBase === 'string' && envApiBase.startsWith('/api')) ? envApiBase : '/api'
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -52,27 +34,12 @@ export const setDemoMode = (enabled) => {
 
 export const isDemoMode = () => localStorage.getItem(DEMO_MODE_KEY) === '1'
 
-// Response interceptor for offline handling
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (isDemoMode()) {
       return Promise.reject({ offline: true, message: 'DEMO_MODE' })
     }
-    // #region agent log
-    debugLog({
-      hypothesisId: 'H2',
-      location: 'liff-app/src/services/api.js:34',
-      message: 'API response error intercepted',
-      data: {
-        url: error?.config?.url || null,
-        method: error?.config?.method || null,
-        status: error?.response?.status || null,
-        responseMessage: error?.response?.data?.message || null,
-        offline: !navigator.onLine
-      }
-    })
-    // #endregion
     if (!navigator.onLine) {
       return Promise.reject({ offline: true, message: 'ไม่มีการเชื่อมต่ออินเทอร์เน็ต' })
     }
@@ -85,53 +52,23 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
-  // #region agent log
-  debugLog({
-    hypothesisId: 'H3',
-    location: 'liff-app/src/services/api.js:54',
-    message: 'API request sent',
-    data: {
-      baseURL: config.baseURL || null,
-      url: config.url || null,
-      method: config.method || null,
-      hasAuthHeader: !!config.headers?.Authorization
-    }
-  })
-  // #endregion
   return config
 })
 
 export const loginWithLineAccessToken = async (accessToken) => {
-  // #region agent log
-  debugLog({
-    hypothesisId: 'H6',
-    location: 'liff-app/src/services/api.js:89',
-    message: 'Start backend auth exchange',
-    data: { hasAccessToken: !!accessToken }
-  })
-  // #endregion
   const res = await api.post('/auth/line/login', { access_token: accessToken })
   const token = res?.data?.data?.token || null
   if (token) {
     setAuthToken(token)
     setDemoMode(false)
   }
-  // #region agent log
-  debugLog({
-    hypothesisId: 'H6',
-    location: 'liff-app/src/services/api.js:101',
-    message: 'Backend auth exchange result',
-    data: { statusOk: !!res?.data?.success, hasApiToken: !!token }
-  })
-  // #endregion
   return res
 }
 
-// ── Retry logic for network resilience ──────────────────────
 const MAX_RETRIES = 2
 const RETRY_DELAY_MS = 1000
 
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const withRetry = async (fn, retries = MAX_RETRIES) => {
   let lastError
@@ -140,7 +77,6 @@ const withRetry = async (fn, retries = MAX_RETRIES) => {
       return await fn()
     } catch (err) {
       lastError = err
-      // Only retry on network errors, not on HTTP 4xx/5xx
       if (err.response || err.offline) throw err
       if (i < retries) await sleep(RETRY_DELAY_MS * (i + 1))
     }
@@ -148,7 +84,6 @@ const withRetry = async (fn, retries = MAX_RETRIES) => {
   throw lastError
 }
 
-// Activity Actions
 export const logActivity = async (data) => {
   return withRetry(() => api.post('/activities', data))
 }
@@ -157,12 +92,10 @@ export const getActivities = async (type, id, limit = 10) => {
   return api.get(`/targets/${type}/${id}/activities`, { params: { limit } })
 }
 
-// Target Info
 export const getTargetInfo = async (type, id) => {
   return api.get(`/targets/${type}/${id}`)
 }
 
-// Tasks
 export const getTasks = async (userId) => {
   return api.get('/tasks', { params: { user_id: userId } })
 }
@@ -171,23 +104,14 @@ export const completeTask = async (taskId) => {
   return withRetry(() => api.patch(`/tasks/${taskId}/complete`))
 }
 
-// Problem Reports
 export const submitProblemReport = async (formData) => {
   return withRetry(() => api.post('/problems', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }))
 }
 
-// ── Offline Queue ─────────────────────────────────────────────
-// Photos are too large for localStorage and File objects cannot be JSON-serialized.
-// We use IndexedDB (via idb-keyval-like API) to persist photo Blobs separately,
-// keyed by the same photoId used in the queue.
-//
-// Storage budget: ~5MB localStorage for queue metadata, unlimited IndexedDB for photos.
-
 const OFFLINE_QUEUE_KEY = 'farm_offline_queue'
 
-// ── IndexedDB wrapper for photo blob storage ──
 const DB_NAME = 'farm_liff_db'
 const DB_VERSION = 1
 const PHOTO_STORE = 'photos'
@@ -248,26 +172,18 @@ const photoDBClear = async () => {
   })
 }
 
-// ── Queue operations ──
-
 const generateId = () => `${Date.now()}_${Math.random().toString(36).slice(2, 11)}`
 
-// Serialize queue item — store File/Blob photos in IndexedDB, keep only the reference in localStorage queue
 const serializeQueueItem = async (action, data) => {
   const serialized = { ...data }
-  const photoIdsToCleanup = []
 
   if (serialized.photo && serialized.photo instanceof File) {
     const photoId = generateId()
     serialized._photoId = photoId
-    // Store blob in IndexedDB (persists across page refreshes)
     try {
       await photoDBPut({ id: photoId, blob: serialized.photo, timestamp: Date.now() })
     } catch (e) {
       console.error('Failed to store photo in IndexedDB:', e)
-      // If storage fails (quota exceeded, private browsing, etc.),
-      // remove photo from queued data so the action still syncs without the photo.
-      // The user will need to re-add the photo when back online.
       delete serialized.photo
       delete serialized._photoId
     }
@@ -282,12 +198,10 @@ const serializeQueueItem = async (action, data) => {
   }
 }
 
-// Restore Blob from IndexedDB back into a File-like object for FormData upload
 const restorePhotoFromDB = async (photoId) => {
   try {
     const record = await photoDBGet(photoId)
     if (!record) return null
-    // Reconstruct a File from the stored Blob (Blob is File's parent, acceptable for FormData)
     return record.blob
   } catch (e) {
     console.error('Failed to restore photo from IndexedDB:', e)
@@ -313,7 +227,6 @@ export const getOfflineQueue = () => {
 
 export const clearOfflineQueue = () => {
   localStorage.removeItem(OFFLINE_QUEUE_KEY)
-  // Also clear photo blobs from IndexedDB
   photoDBClear().catch(console.error)
 }
 
@@ -327,7 +240,6 @@ export const syncOfflineQueue = async () => {
 
   for (const item of queue) {
     try {
-      // Restore photo Blob from IndexedDB if needed
       const itemData = { ...item.data }
       if (itemData._photoId) {
         const restoredPhoto = await restorePhotoFromDB(itemData._photoId)
@@ -363,7 +275,6 @@ export const syncOfflineQueue = async () => {
           break
       }
 
-      // Clean up IndexedDB entry for successfully synced photos
       if (item.data._photoId) {
         syncedPhotoIds.push(item.data._photoId)
       }
@@ -374,8 +285,7 @@ export const syncOfflineQueue = async () => {
     }
   }
 
-  // Remove synced photo blobs from IndexedDB
-  await Promise.all(syncedPhotoIds.map(id => photoDBDelete(id).catch(() => {})))
+  await Promise.all(syncedPhotoIds.map((id) => photoDBDelete(id).catch(() => {})))
 
   if (failedItems.length === 0) {
     clearOfflineQueue()

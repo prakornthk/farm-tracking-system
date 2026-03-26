@@ -18,6 +18,8 @@ class DashboardController extends ApiController
     {
         $request->validate([
             'farm_id' => 'nullable|exists:farms,id',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
 
         $user = $request->user();

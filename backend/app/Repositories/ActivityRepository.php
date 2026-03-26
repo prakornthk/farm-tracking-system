@@ -18,7 +18,9 @@ class ActivityRepository implements ActivityRepositoryInterface
     {
         $query = Activity::with(['user', 'farm', 'activitable']);
 
-        if ($request->has('farm_id')) {
+        if ($request->has('accessible_farm_ids')) {
+            $query->whereIn('farm_id', $request->input('accessible_farm_ids'));
+        } elseif ($request->has('farm_id')) {
             $query->where('farm_id', $request->input('farm_id'));
         }
 
@@ -39,7 +41,7 @@ class ActivityRepository implements ActivityRepositoryInterface
         }
 
         return $query->orderBy('activity_date', 'desc')
-            ->paginate($request->input('per_page', 20));
+            ->paginate(min((int) $request->input('per_page', 20), 100));
     }
 
     /**
