@@ -129,10 +129,12 @@ const App = () => {
   return (
     <>
       {!isOnline && (
-        <div className="offline-banner">📴 ไม่มีการเชื่อมต่ออินเทอร์เน็ต</div>
+        <div className="offline-banner" role="status" aria-live="polite" aria-atomic="true">
+          📴 ไม่มีการเชื่อมต่ออินเทอร์เน็ต
+        </div>
       )}
       <Header title="Farm Tracking" currentView={currentView} onViewChange={handleViewChange} />
-      <main style={{ paddingTop: '0' }}>{renderContent()}</main>
+      <main style={{ paddingTop: '0' }} id="main-content">{renderContent()}</main>
     </>
   )
 }

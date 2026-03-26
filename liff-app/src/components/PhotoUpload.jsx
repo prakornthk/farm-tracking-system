@@ -55,8 +55,9 @@ const PhotoUpload = ({ onPhotoSelected, photoPreview, onRemove }) => {
         capture="environment"
         onChange={handleChange}
         style={{ display: 'none' }}
+        aria-hidden="true"
       />
-      <div className="icon">📷</div>
+      <div className="icon" aria-hidden="true">📷</div>
       <p>แตะเพื่อถ่ายรูปหรือเลือกรูปภาพ</p>
     </div>
   )
