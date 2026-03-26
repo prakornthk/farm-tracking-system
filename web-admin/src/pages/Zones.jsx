@@ -141,10 +141,11 @@ export default function Zones() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
             <h2 className="text-lg font-semibold mb-4">{editZone ? 'แก้ไขโซน' : 'เพิ่มโซนใหม่'}</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" aria-label={editZone ? 'แก้ไขโซน' : 'เพิ่มโซนใหม่'}>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ชื่อโซน *</label>
+                <label htmlFor="zone-name" className="block text-sm font-medium text-gray-700 mb-1">ชื่อโซน *</label>
                 <input
+                  id="zone-name"
                   type="text"
                   className="input"
                   value={form.name}
@@ -153,8 +154,9 @@ export default function Zones() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">รายละเอียด</label>
+                <label htmlFor="zone-description" className="block text-sm font-medium text-gray-700 mb-1">รายละเอียด</label>
                 <textarea
+                  id="zone-description"
                   className="input"
                   rows={3}
                   value={form.description}
@@ -162,7 +164,7 @@ export default function Zones() {
                   placeholder="รายละเอียดเพิ่มเติม..."
                 />
               </div>
-              {formError && <p className="text-sm text-red-600">{formError}</p>}
+              {formError && <p className="text-sm text-red-600" role="alert">{formError}</p>}
               <div className="flex gap-3 justify-end pt-2">
                 <button type="button" onClick={() => setShowForm(false)} className="btn btn-secondary">
                   ยกเลิก

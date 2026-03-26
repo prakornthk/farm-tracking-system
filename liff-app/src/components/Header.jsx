@@ -1,6 +1,6 @@
 import React from 'react'
 
-const Header = ({ title = 'Farm Tracking', currentView, onViewChange }) => {
+const Header = React.memo(({ title = 'Farm Tracking', currentView, onViewChange }) => {
   return (
     <header className="header">
       <h1>{title}</h1>
@@ -20,6 +20,6 @@ const Header = ({ title = 'Farm Tracking', currentView, onViewChange }) => {
       </nav>
     </header>
   )
-}
+})
 
 export default Header

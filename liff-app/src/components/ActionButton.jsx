@@ -9,7 +9,7 @@ const ACTION_CONFIG = {
   report: { icon: '⚠️', label: 'แจ้งปัญหา', color: '#f44336' }
 }
 
-const ActionButton = ({ action, onClick }) => {
+const ActionButton = React.memo(({ action, onClick }) => {
   const config = ACTION_CONFIG[action] || { icon: '❓', label: action, color: '#666' }
   const isReport = action === 'report'
 
@@ -23,7 +23,7 @@ const ActionButton = ({ action, onClick }) => {
       <span className="label">{config.label}</span>
     </button>
   )
-}
+})
 
 export { ACTION_CONFIG }
 export default ActionButton

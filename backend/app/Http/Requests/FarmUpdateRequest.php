@@ -20,7 +20,7 @@ class FarmUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'sometimes|required|string|max:255',
+            'name' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
             'location' => 'nullable|string|max:500',
             'latitude' => 'nullable|numeric|between:-90,90',

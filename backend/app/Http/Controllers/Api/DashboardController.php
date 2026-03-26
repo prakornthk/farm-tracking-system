@@ -176,28 +176,30 @@ class DashboardController extends ApiController
     private function getOverallMetrics(array $dateRange, $user = null): array
     {
         // Get farms user has access to (or all farms for super_admin)
-        $farmQuery = Farm::where('is_active', true);
+        $farmQuery = Farm::where('is_active', true)->with('zones.plots.plants');
         if ($user && $user->role !== 'super_admin') {
             $farmQuery->whereHas('users', function ($q) use ($user) {
                 $q->where('users.id', $user->id);
             });
         }
         $farms = $farmQuery->get();
-        
+
         $farmIds = $farms->pluck('id')->toArray();
-        $totalZones = 0;
-        $totalPlots = 0;
-        $totalPlants = 0;
 
-        foreach ($farms as $farm) {
-            $totalZones += $farm->zones()->count();
-            $totalPlots += $farm->zones->flatMap->plots->count();
-            $totalPlants += $farm->zones->flatMap->flatMap->plots->flatMap->plants->count();
-        }
+        // Use aggregate queries instead of iterating over loaded relations
+        $totalZones = \App\Models\Zone::whereIn('farm_id', $farmIds)->count();
+        $totalPlots = \App\Models\Plot::whereIn('zone_id', fn($q) =>
+            $q->select('id')->from('zones')->whereIn('farm_id', $farmIds)
+        )->count();
+        $totalPlants = \App\Models\Plant::whereIn('plot_id', fn($q) =>
+            $q->select('id')->from('plots')->whereIn('zone_id', fn($pq) =>
+                $pq->select('id')->from('zones')->whereIn('farm_id', $farmIds)
+            )
+        )->count();
 
-        $activitiesQuery = Activity::whereIn('farm_id', $farmIds)
-            ->whereBetween('activity_date', [$dateRange['start_date'], $dateRange['end_date']]);
-        $activitiesCount = $activitiesQuery->count();
+        $activitiesCount = Activity::whereIn('farm_id', $farmIds)
+            ->whereBetween('activity_date', [$dateRange['start_date'], $dateRange['end_date']])
+            ->count();
 
         $harvestQuery = Activity::whereIn('farm_id', $farmIds)
             ->where('type', 'harvesting')

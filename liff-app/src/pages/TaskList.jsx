@@ -18,8 +18,8 @@ const TaskList = ({ userId, onBack, isOnline }) => {
     
     try {
       const res = await getTasks(userId)
-      // Backend returns paginated response
-      const tasksData = res.data?.data || res.data?. || []
+      // Backend returns paginated response: { data: { data: [...] } } or direct: { data: [...] }
+      const tasksData = res.data?.data ?? res.data ?? []
       setTasks(Array.isArray(tasksData) ? tasksData : [])
     } catch (err) {
       console.error('Fetch tasks error:', err)

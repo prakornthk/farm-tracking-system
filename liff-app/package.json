@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@line/liff-2": "^2.23.2",
     "axios": "^1.6.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
@@ -19,7 +20,12 @@
     "@vitejs/plugin-react": "^4.2.1",
     "vite": "^5.1.0"
   },
-  "notes": {
-    "line_liff_sdk": "ติดตั้ง @line/liff-2 เมื่อใช้งานจริง: npm install @line/liff-2"
-  }
+  "browserslist": [
+    ">1%",
+    "last 2 versions",
+    "not dead",
+    "not ie <= 11",
+    "iOS >= 12",
+    "Safari >= 12"
+  ]
 }

@@ -150,10 +150,11 @@ export default function Plots() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
             <h2 className="text-lg font-semibold mb-4">{editPlot ? 'แก้ไขแปลง' : 'เพิ่มแปลงใหม่'}</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" aria-label={editPlot ? 'แก้ไขแปลง' : 'เพิ่มแปลงใหม่'}>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ชื่อแปลง *</label>
+                <label htmlFor="plot-name" className="block text-sm font-medium text-gray-700 mb-1">ชื่อแปลง *</label>
                 <input
+                  id="plot-name"
                   type="text"
                   className="input"
                   value={form.name}
@@ -162,8 +163,9 @@ export default function Plots() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ขนาด (ตร.ม.)</label>
+                <label htmlFor="plot-size" className="block text-sm font-medium text-gray-700 mb-1">ขนาด (ตร.ม.)</label>
                 <input
+                  id="plot-size"
                   type="text"
                   className="input"
                   value={form.size}
@@ -172,8 +174,9 @@ export default function Plots() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ชนิดพืช</label>
+                <label htmlFor="plot-plant-type" className="block text-sm font-medium text-gray-700 mb-1">ชนิดพืช</label>
                 <input
+                  id="plot-plant-type"
                   type="text"
                   className="input"
                   value={form.plant_type}
@@ -181,7 +184,7 @@ export default function Plots() {
                   placeholder="เช่น สตรอว์เบอร์รี"
                 />
               </div>
-              {formError && <p className="text-sm text-red-600">{formError}</p>}
+              {formError && <p className="text-sm text-red-600" role="alert">{formError}</p>}
               <div className="flex gap-3 justify-end pt-2">
                 <button type="button" onClick={() => setShowForm(false)} className="btn btn-secondary">
                   ยกเลิก

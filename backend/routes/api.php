@@ -98,8 +98,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{plotId}/plants/{plantId}', [PlantController::class, 'update']);
         Route::delete('/{plotId}/plants/{plantId}', [PlantController::class, 'destroy']);
 
-        // Activities for plot
-        Route::get('/{plotId}/activities', [ActivityController::class, 'byTarget']);
+        // Activities for plot (type is passed as last URL segment)
+        Route::get('/{id}/activities/{type}', [ActivityController::class, 'byTarget'])
+            ->where('type', 'plot');
     });
 
     // Plants (direct access)
@@ -109,8 +110,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}', [PlantController::class, 'destroy']);
         Route::post('/find-by-qr', [PlantController::class, 'findByQrCode']);
 
-        // Activities for plant
-        Route::get('/{plantId}/activities', [ActivityController::class, 'byTarget']);
+        // Activities for plant (type is passed as last URL segment)
+        Route::get('/{id}/activities/{type}', [ActivityController::class, 'byTarget'])
+            ->where('type', 'plant');
     });
 
     // Activities
@@ -154,6 +156,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/send-with-image', [LineNotifyController::class, 'sendWithImage']);
         Route::post('/send-task', [LineNotifyController::class, 'sendTaskNotification']);
         Route::post('/send-problem', [LineNotifyController::class, 'sendProblemNotification']);
+        Route::post('/authorize', [LineNotifyController::class, 'authorize']);
+        Route::post('/revoke', [LineNotifyController::class, 'revoke']);
     });
 });
 

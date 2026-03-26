@@ -153,10 +153,11 @@ export default function Plants() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
             <h2 className="text-lg font-semibold mb-4">{editPlant ? 'แก้ไขต้นไม้' : 'เพิ่มต้นไม้ใหม่'}</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" aria-label={editPlant ? 'แก้ไขต้นไม้' : 'เพิ่มต้นไม้ใหม่'}>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ชื่อต้นไม้ *</label>
+                <label htmlFor="plant-name" className="block text-sm font-medium text-gray-700 mb-1">ชื่อต้นไม้ *</label>
                 <input
+                  id="plant-name"
                   type="text"
                   className="input"
                   value={form.name}
@@ -165,8 +166,9 @@ export default function Plants() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">สถานะ</label>
+                <label htmlFor="plant-status" className="block text-sm font-medium text-gray-700 mb-1">สถานะ</label>
                 <select
+                  id="plant-status"
                   className="input"
                   value={form.status}
                   onChange={(e) => setForm({ ...form, status: e.target.value })}
@@ -178,8 +180,9 @@ export default function Plants() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">วันที่ปลูก</label>
+                <label htmlFor="plant-date" className="block text-sm font-medium text-gray-700 mb-1">วันที่ปลูก</label>
                 <input
+                  id="plant-date"
                   type="date"
                   className="input"
                   value={form.planted_date}
@@ -187,8 +190,9 @@ export default function Plants() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">บันทึก</label>
+                <label htmlFor="plant-notes" className="block text-sm font-medium text-gray-700 mb-1">บันทึก</label>
                 <textarea
+                  id="plant-notes"
                   className="input"
                   rows={3}
                   value={form.notes}

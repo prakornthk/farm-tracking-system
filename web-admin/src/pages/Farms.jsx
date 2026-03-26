@@ -128,26 +128,26 @@ export default function Farms() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-5">{editFarm ? 'แก้ไขฟาร์ม' : 'เพิ่มฟาร์มใหม่'}</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" aria-label={editFarm ? 'แก้ไขฟาร์ม' : 'เพิ่มฟาร์มใหม่'}>
               <div>
-                <label className="label">ชื่อฟาร์ม *</label>
-                <input type="text" className="input" value={form.name}
+                <label htmlFor="farm-name" className="label">ชื่อฟาร์ม *</label>
+                <input id="farm-name" type="text" className="input" value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="เช่น ฟาร์มสตรอว์เบอร์รี" />
               </div>
               <div>
-                <label className="label">ที่อยู่/พื้นที่</label>
-                <input type="text" className="input" value={form.location}
+                <label htmlFor="farm-location" className="label">ที่อยู่/พื้นที่</label>
+                <input id="farm-location" type="text" className="input" value={form.location}
                   onChange={(e) => setForm({ ...form, location: e.target.value })}
                   placeholder="เช่น จ.เชียงใหม่" />
               </div>
               <div>
-                <label className="label">รายละเอียด</label>
-                <textarea className="input" rows={3} value={form.description}
+                <label htmlFor="farm-description" className="label">รายละเอียด</label>
+                <textarea id="farm-description" className="input" rows={3} value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   placeholder="รายละเอียดเพิ่มเติม..." />
               </div>
-              {formError && <p className="text-sm text-danger">{formError}</p>}
+              {formError && <p className="text-sm text-danger" role="alert">{formError}</p>}
               <div className="flex gap-3 justify-end pt-2">
                 <button type="button" onClick={() => setShowForm(false)} className="btn btn-secondary">ยกเลิก</button>
                 <button type="submit" className="btn btn-primary" disabled={saving}>

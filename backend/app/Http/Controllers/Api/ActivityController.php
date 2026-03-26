@@ -80,14 +80,15 @@ class ActivityController extends ApiController
 
     /**
      * Get activities for a specific target (plot or plant).
+     * Route: GET /plots/{id}/activities/plot or /plants/{id}/activities/plant
      */
-    public function byTarget(Request $request, string $type, int $id): JsonResponse
+    public function byTarget(Request $request, int $id, string $type): JsonResponse
     {
         if (!in_array($type, ['plot', 'plant'])) {
             return $this->error('Invalid target type', 400);
         }
 
-        // Verify target exists
+        // Verify target exists and get activities
         if ($type === 'plot') {
             Plot::findOrFail($id);
         } else {

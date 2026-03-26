@@ -28,14 +28,15 @@ const ProblemReport = ({ type, id, onBack, onSuccess, isOnline }) => {
 
   const handlePhotoSelected = (file) => {
     setPhoto(file)
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      setPhotoPreview(reader.result)
-    }
-    reader.readAsDataURL(file)
+    // Use createObjectURL for better memory management
+    const objectUrl = URL.createObjectURL(file)
+    setPhotoPreview(objectUrl)
   }
 
   const handleRemovePhoto = () => {
+    if (photoPreview) {
+      URL.revokeObjectURL(photoPreview)
+    }
     setPhoto(null)
     setPhotoPreview(null)
   }

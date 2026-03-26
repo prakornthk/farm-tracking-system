@@ -14,15 +14,12 @@ const ActionForm = ({ type, id, action, onBack, onSuccess, isOnline }) => {
 
   const handlePhotoSelected = (file) => {
     setPhoto(file)
-    // Use createObjectURL for better memory management than FileReader
-    const objectUrl = URL.createObjectURL(file)
-    setPhotoPreview(objectUrl)
+    const reader = new FileReader()
+    reader.onloadend = () => { setPhotoPreview(reader.result) }
+    reader.readAsDataURL(file)
   }
 
   const handleRemovePhoto = () => {
-    if (photoPreview) {
-      URL.revokeObjectURL(photoPreview)
-    }
     setPhoto(null)
     setPhotoPreview(null)
   }
@@ -31,7 +28,6 @@ const ActionForm = ({ type, id, action, onBack, onSuccess, isOnline }) => {
     setLoading(true)
     setError(null)
 
-    // activityData now includes photo for all action types
     const activityData = {
       activitable_type: type === 'plant' ? 'App\\Models\\Plant' : 'App\\Models\\Plot',
       activitable_id: id,
@@ -42,7 +38,6 @@ const ActionForm = ({ type, id, action, onBack, onSuccess, isOnline }) => {
 
     try {
       if (!isOnline) {
-        // Queue for offline sync - photo will be stored properly
         addToOfflineQueue('activity', activityData)
         onSuccess()
         return
@@ -52,19 +47,14 @@ const ActionForm = ({ type, id, action, onBack, onSuccess, isOnline }) => {
       formData.append('activitable_type', type === 'plant' ? 'App\\Models\\Plant' : 'App\\Models\\Plot')
       formData.append('activitable_id', id)
       formData.append('type', action)
-      if (notes.trim()) {
-        formData.append('notes', notes.trim())
-      }
-      if (photo) {
-        formData.append('photo', photo)
-      }
+      if (notes.trim()) formData.append('notes', notes.trim())
+      if (photo) formData.append('photo', photo)
 
       await logActivity(formData)
       onSuccess()
     } catch (err) {
       console.error('Submit error:', err)
       if (err.offline) {
-        // Queue for later
         addToOfflineQueue('activity', activityData)
         onSuccess()
       } else {
@@ -75,56 +65,57 @@ const ActionForm = ({ type, id, action, onBack, onSuccess, isOnline }) => {
     }
   }
 
+  const isReport = action === 'report'
+
   return (
     <div className="container">
       <button className="back-btn" onClick={onBack}>
         ← กลับ
       </button>
 
-      {/* Action Header */}
-      <div className="card" style={{ textAlign: 'center', marginBottom: '16px' }}>
-        <div style={{ fontSize: '48px', marginBottom: '8px' }}>{actionConfig.icon}</div>
-        <h2>{actionConfig.label}</h2>
-        <p style={{ color: '#666', fontSize: '14px' }}>
-          {type === 'plant' ? 'ต้นไม้' : 'แปลง'} #{id}
-        </p>
+      {/* Action Header Card */}
+      <div className="card" style={{ textAlign: 'center', marginBottom: 'var(--space-4)' }}>
+        <div style={{ fontSize: '2.5rem', marginBottom: 'var(--space-2)' }}>
+          {actionConfig.icon}
+        </div>
+        <h2 className="card-title" style={{ marginBottom: 'var(--space-1)' }}>
+          {actionConfig.label}
+        </h2>
+        <span className="type-badge">
+          {type === 'plant' ? '🌱 ต้นไม้' : '🗺️ แปลง'} #{id}
+        </span>
       </div>
 
-      {/* Form */}
-      <div className="card form-section">
+      {/* Form Card */}
+      <div className="card">
         {error && (
-          <div className="error" style={{ marginBottom: '16px' }}>
+          <div className="error" style={{ marginBottom: 'var(--space-4)' }}>
             {error}
           </div>
         )}
 
         <div className="form-group">
-          <label>หมายเหตุ (ไม่บังคับ)</label>
+          <label className="form-label">หมายเหตุ (ไม่บังคับ)</label>
           <textarea
+            className="form-textarea"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="เพิ่มรายละเอียดเพิ่มเติม..."
             maxLength={500}
           />
-          <small style={{ color: '#999', fontSize: '12px' }}>
-            {notes.length}/500
-          </small>
+          <p className="form-hint">{notes.length}/500</p>
         </div>
 
-        {/* Photo Upload - available for all action types */}
-        <div className="form-group">
-          <label>รูปภาพประกอบ (ไม่บังคับ)</label>
-          <PhotoUpload
-            onPhotoSelected={handlePhotoSelected}
-            photoPreview={photoPreview}
-            onRemove={handleRemovePhoto}
-          />
-          {action === 'report' && (
-            <small style={{ color: '#999', fontSize: '12px', display: 'block', marginTop: '6px' }}>
-              แนะนำสำหรับการแจ้งปัญหา
-            </small>
-          )}
-        </div>
+        {isReport && (
+          <div className="form-group">
+            <label className="form-label">รูปภาพประกอบ (ไม่บังคับ)</label>
+            <PhotoUpload
+              onPhotoSelected={handlePhotoSelected}
+              photoPreview={photoPreview}
+              onRemove={handleRemovePhoto}
+            />
+          </div>
+        )}
 
         <button
           className="btn btn-primary"
@@ -137,7 +128,7 @@ const ActionForm = ({ type, id, action, onBack, onSuccess, isOnline }) => {
         <button
           className="btn btn-secondary"
           onClick={onBack}
-          style={{ marginTop: '10px' }}
+          style={{ marginTop: 'var(--space-2)' }}
           disabled={loading}
         >
           ยกเลิก
