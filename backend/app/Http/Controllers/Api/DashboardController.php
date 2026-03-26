@@ -197,6 +197,16 @@ class DashboardController extends ApiController
             )
         )->count();
 
+        // Plant status breakdown
+        $plantStatusBreakdown = \App\Models\Plant::whereIn('plot_id', fn($q) =>
+            $q->select('id')->from('plots')->whereIn('zone_id', fn($pq) =>
+                $pq->select('id')->from('zones')->whereIn('farm_id', $farmIds)
+            )
+        )->select('status', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->toArray();
+
         $activitiesCount = Activity::whereIn('farm_id', $farmIds)
             ->whereBetween('activity_date', [$dateRange['start_date'], $dateRange['end_date']])
             ->count();
@@ -206,7 +216,22 @@ class DashboardController extends ApiController
             ->whereBetween('activity_date', [$dateRange['start_date'], $dateRange['end_date']]);
         $harvestCount = $harvestQuery->count();
         $totalYield = $harvestQuery->sum('yield_amount');
-        $totalYieldValue = $harvestQuery->sum('yield_total_value');
+
+        // Yield by plot (only for plot-level activities)
+        $yieldByPlot = Activity::whereIn('farm_id', $farmIds)
+            ->where('type', 'harvesting')
+            ->where('activitable_type', 'App\\Models\\Plot')
+            ->whereBetween('activity_date', [$dateRange['start_date'], $dateRange['end_date']])
+            ->select('activitable_id', \Illuminate\Support\Facades\DB::raw('SUM(yield_amount) as total_yield'))
+            ->groupBy('activitable_id')
+            ->with('activitable:id,name')
+            ->get()
+            ->map(fn($item) => [
+                'plot_id' => $item->activitable_id,
+                'plot_name' => $item->activitable?->name ?? 'Unknown',
+                'total_yield' => (float) $item->total_yield,
+            ])
+            ->toArray();
 
         $problemsQuery = ProblemReport::whereIn('farm_id', $farmIds);
         $openProblems = $problemsQuery->whereIn('status', ['reported', 'investigating'])->count();
@@ -218,7 +243,17 @@ class DashboardController extends ApiController
         $completedTasks = $tasksQuery->where('status', 'completed')
             ->whereBetween('completed_at', [$dateRange['start_date'], $dateRange['end_date']])->count();
 
+        // Today's tasks
+        $todayTasks = $tasksQuery->whereDate('due_date', now()->toDateString())->count();
+
         return [
+            'total_plants' => $totalPlants,
+            'plant_status_breakdown' => $plantStatusBreakdown,
+            'total_plots' => $totalPlots,
+            'today_tasks' => $todayTasks,
+            'completed_tasks_today' => $completedTasks,
+            'total_yield' => (float) $totalYield,
+            'yield_by_plot' => $yieldByPlot,
             'structures' => [
                 'farms' => $farms->count(),
                 'zones' => $totalZones,
@@ -230,8 +265,7 @@ class DashboardController extends ApiController
             ],
             'harvest' => [
                 'count' => $harvestCount,
-                'total_yield' => $totalYield,
-                'total_value' => $totalYieldValue,
+                'total_yield' => (float) $totalYield,
             ],
             'problems' => [
                 'open' => $openProblems,

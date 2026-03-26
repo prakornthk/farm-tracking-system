@@ -89,7 +89,7 @@ class ActivityModelTest extends TestCase
     public function activity_has_valid_types(): void
     {
         $expectedTypes = [
-            'watering', 'fertilizing', 'pesticide', 'weeding',
+            'watering', 'fertilizing', 'pesticide', 'spraying', 'weeding',
             'pruning', 'harvesting', 'inspection', 'planting',
             'soil_preparation', 'other'
         ];

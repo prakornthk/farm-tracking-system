@@ -62,10 +62,11 @@ describe('ActionButton', () => {
 })
 
 describe('ACTION_CONFIG', () => {
-  it('exports config for all 6 action types', () => {
+  it('exports config for all 7 action types', () => {
     expect(ACTION_CONFIG).toHaveProperty('water')
     expect(ACTION_CONFIG).toHaveProperty('fertilize')
     expect(ACTION_CONFIG).toHaveProperty('prune')
+    expect(ACTION_CONFIG).toHaveProperty('spraying')
     expect(ACTION_CONFIG).toHaveProperty('inspect')
     expect(ACTION_CONFIG).toHaveProperty('harvest')
     expect(ACTION_CONFIG).toHaveProperty('report')

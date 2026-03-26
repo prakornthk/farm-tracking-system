@@ -74,10 +74,10 @@ describe('ScanPage', () => {
       })
     })
 
-    it('renders 6 action buttons', async () => {
+    it('renders 7 action buttons', async () => {
       renderScanPage()
       await waitFor(() => {
-        expect(screen.getAllByRole('button').length).toBeGreaterThanOrEqual(6)
+        expect(screen.getAllByRole('button').length).toBeGreaterThanOrEqual(7)
       })
     })
 
