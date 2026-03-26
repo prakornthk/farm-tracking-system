@@ -15,12 +15,12 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-  { path: '/dashboard', label: 'แดชบอร์ด', icon: LayoutDashboard, roles: ['owner', 'manager', 'worker'] },
-  { path: '/farms', label: 'ฟาร์ม', icon: LandPlot, roles: ['owner', 'manager'] },
-  { path: '/zones', label: 'โซน', icon: LayoutGrid, roles: ['owner', 'manager'] },
-  { path: '/tasks', label: 'งาน', icon: ClipboardList, roles: ['owner', 'manager', 'worker'] },
-  { path: '/problems', label: 'ปัญหา', icon: AlertTriangle, roles: ['owner', 'manager', 'worker'] },
-  { path: '/users', label: 'ผู้ใช้', icon: Users, roles: ['owner'] },
+  { path: '/dashboard', label: 'แดชบอร์ด', icon: LayoutDashboard, roles: ['super_admin', 'owner', 'manager', 'worker'] },
+  { path: '/farms', label: 'ฟาร์ม', icon: LandPlot, roles: ['super_admin', 'owner', 'manager'] },
+  { path: '/zones', label: 'โซน', icon: LayoutGrid, roles: ['super_admin', 'owner', 'manager'] },
+  { path: '/tasks', label: 'งาน', icon: ClipboardList, roles: ['super_admin', 'owner', 'manager', 'worker'] },
+  { path: '/problems', label: 'ปัญหา', icon: AlertTriangle, roles: ['super_admin', 'owner', 'manager', 'worker'] },
+  { path: '/users', label: 'ผู้ใช้', icon: Users, roles: ['super_admin', 'owner'] },
 ];
 
 const roleLabels = {
