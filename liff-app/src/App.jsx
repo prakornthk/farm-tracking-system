@@ -59,7 +59,12 @@ const App = () => {
   if (!isReady) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-        <div className="spinner" style={{ margin: '0 auto' }}></div>
+        <div
+          className="spinner"
+          role="status"
+          aria-label="กำลังเริ่มต้นแอป"
+          style={{ margin: '0 auto' }}
+        ></div>
       </div>
     )
   }
@@ -134,7 +139,10 @@ const App = () => {
         </div>
       )}
       <Header title="Farm Tracking" currentView={currentView} onViewChange={handleViewChange} />
-      <main style={{ paddingTop: '0' }} id="main-content">{renderContent()}</main>
+      <main
+        id="main-content"
+        style={{ paddingTop: isOnline ? '0' : '60px' }}
+      >{renderContent()}</main>
     </>
   )
 }

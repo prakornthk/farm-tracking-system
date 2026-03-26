@@ -16,7 +16,7 @@ const LoginPage = ({ onLogin, error }) => {
           </div>
         )}
         
-        <button className="btn btn-primary" onClick={onLogin} aria-label="เข้าสู่ระบบด้วย LINE">
+        <button className="btn btn-primary" onClick={onLogin} aria-label="เข้าสู่ระบบด้วย LINE" style={{ minHeight: '44px' }}>
           เข้าสู่ระบบด้วย LINE
         </button>
         

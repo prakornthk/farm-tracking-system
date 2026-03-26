@@ -60,8 +60,11 @@ const TaskList = ({ userId, onBack, isOnline }) => {
   }
 
   const getIconBg = (type) => {
-    const bgs = { plant: 'background: var(--color-primary-bg)', plot: 'background: var(--color-info-bg)' }
-    return bgs[type] || 'background: var(--color-border)'
+    const bgs = {
+      plant: 'var(--color-primary-bg)',
+      plot:  'var(--color-info-bg)'
+    }
+    return bgs[type] || 'var(--color-border)'
   }
 
   const getStatusLabel = { pending: 'รอดำเนินการ', 'in-progress': 'กำลังทำ', completed: 'เสร็จแล้ว' }
