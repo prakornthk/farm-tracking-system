@@ -296,14 +296,6 @@ Accept: application/json
 }
 ```
 
-**Example Request:**
-```bash
-curl -X POST http://api.farm.localhost/api/farms \
-  -H "Authorization: Bearer {token}" \
-  -H "Content-Type: application/json" \
-  -d '{"name": "ฟาร์มสวนผลไม้ใหม่", "description": "ฟาร์มทดสอบ", "location": "จ.เชียงราย"}'
-```
-
 **Response 201:**
 ```json
 {
@@ -533,14 +525,6 @@ curl -X POST http://api.farm.localhost/api/farms \
 }
 ```
 
-**Example Request:**
-```bash
-curl -X POST http://api.farm.localhost/api/farms/1/zones \
-  -H "Authorization: Bearer {token}" \
-  -H "Content-Type: application/json" \
-  -d '{"name": "โซน B", "description": "โซนปลูกมังคุด", "sort_order": 2}'
-```
-
 **Response 201:**
 ```json
 {
@@ -709,14 +693,6 @@ curl -X POST http://api.farm.localhost/api/farms/1/zones \
   "sort_order": "integer (optional)",
   "is_active": "boolean (optional, default: true)"
 }
-```
-
-**Example Request:**
-```bash
-curl -X POST http://api.farm.localhost/api/zones/1/plots \
-  -H "Authorization: Bearer {token}" \
-  -H "Content-Type: application/json" \
-  -d '{"name": "แปลง 2", "description": "แปลงปลูกทุเรียน", "size": 150, "size_unit": "ตร.ม."}'
 ```
 
 **Response 201:**
@@ -897,14 +873,6 @@ curl -X POST http://api.farm.localhost/api/zones/1/plots \
 }
 ```
 
-**Example Request:**
-```bash
-curl -X POST http://api.farm.localhost/api/plots/1/plants \
-  -H "Authorization: Bearer {token}" \
-  -H "Content-Type: application/json" \
-  -d '{"name": "ต้นที่ 5", "variety": "มะม่วงแม่จัน", "planted_date": "2024-02-01", "expected_harvest_date": "2024-07-01"}'
-```
-
 **Response 201:**
 ```json
 {
@@ -1032,7 +1000,7 @@ curl -X POST http://api.farm.localhost/api/plots/1/plants \
 **Request Body:**
 ```json
 {
-  "qr_code": "string (required) - ข้อมูล QR code"
+  "qr_code": "string (required)"
 }
 ```
 
@@ -1105,3 +1073,1028 @@ curl -X POST http://api.farm.localhost/api/plots/1/plants \
       "activitable_id": 1,
       "type": "watering",
       "description": "รดน้ำต้นมะม่วง",
+      "quantity": 50,
+      "quantity_unit": "ลิตร",
+      "activity_date": "2024-01-15T10:30:00Z",
+      "user": { "id": 1, "name": "สมชาย ใจดี" },
+      "created_at": "2024-01-15T10:30:00Z"
+    }
+  ],
+  "meta": { ... }
+}
+```
+
+---
+
+### POST /api/activities
+
+**คำอธิบาย:** สร้างกิจกรรมใหม่
+
+**Authentication:** ต้องการ
+
+**Request Body:**
+```json
+{
+  "activitable_type": "string (required) - App\\Models\\Plot หรือ App\\Models\\Plant",
+  "activitable_id": "integer (required)",
+  "type": "string (required) - ประเภทกิจกรรม",
+  "description": "string (optional)",
+  "quantity": "decimal (optional)",
+  "quantity_unit": "string (optional)",
+  "yield_amount": "decimal (optional, สำหรับการเก็บเกี่ยว)",
+  "yield_unit": "string (optional)",
+  "yield_price_per_unit": "decimal (optional)",
+  "yield_total_value": "decimal (optional)",
+  "activity_date": "datetime (optional, default: now)",
+  "farm_id": "integer (optional, auto-detected จาก target)"
+}
+```
+
+**Response 201:**
+```json
+{
+  "success": true,
+  "message": "Activity created successfully",
+  "data": {
+    "id": 1,
+    "user_id": 1,
+    "farm_id": 1,
+    "activitable_type": "App\\Models\\Plant",
+    "activitable_id": 1,
+    "type": "watering",
+    "description": "รดน้ำต้นมะม่วง",
+    "quantity": 50,
+    "quantity_unit": "ลิตร",
+    "activity_date": "2024-01-15T10:30:00Z",
+    "created_at": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+**Error Codes:**
+- `403` - Forbidden
+- `422` - Validation error
+
+---
+
+### POST /api/activities/batch
+
+**คำอธิบาย:** สร้างกิจกรรมหลายรายการพร้อมกัน (Batch)
+
+**Authentication:** ต้องการ
+
+**Request Body:**
+```json
+{
+  "activities": [
+    {
+      "activitable_type": "string (required)",
+      "activitable_id": "integer (required)",
+      "type": "string (required)",
+      "description": "string (optional)",
+      "quantity": "decimal (optional)",
+      "quantity_unit": "string (optional)",
+      "activity_date": "datetime (optional)"
+    },
+    {
+      "activitable_type": "string (required)",
+      "activitable_id": "integer (required)",
+      "type": "string (required)",
+      "description": "string (optional)"
+    }
+  ]
+}
+```
+
+**Response 201:**
+```json
+{
+  "success": true,
+  "message": "Activities created successfully",
+  "data": [
+    { "id": 1, "type": "watering", ... },
+    { "id": 2, "type": "fertilizing", ... }
+  ]
+}
+```
+
+**Error Codes:**
+- `403` - Forbidden
+- `422` - Validation error
+
+---
+
+### GET /api/activities/{type}/{id}
+
+**คำอธิบาย:** ดึงกิจกรรมตาม target (plot หรือ plant)
+
+**Authentication:** ต้องการ
+
+**Path Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| type | string | ประเภท target (plot หรือ plant) |
+| id | int | ID ของ plot หรือ plant |
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Activities retrieved successfully",
+  "data": [
+    { "id": 1, "type": "watering", ... },
+    { "id": 2, "type": "fertilizing", ... }
+  ],
+  "meta": { ... }
+}
+```
+
+**Error Codes:**
+- `400` - Invalid target type
+- `403` - Forbidden
+
+---
+
+## Tasks
+
+### GET /api/tasks
+
+**คำอธิบาย:** ดึงรายการงานทั้งหมด
+
+**Authentication:** ต้องการ
+
+**Query Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| page | int | หมายเลขหน้า |
+| per_page | int | จำนวนรายการต่อหน้า |
+| farm_id | int | กรองตามฟาร์ม |
+| status | string | กรองตามสถานะ |
+| priority | string | กรองตามความสำคัญ |
+
+**Task Statuses:**
+- `pending` - รอดำเนินการ
+- `in_progress` - กำลังดำเนินการ
+- `completed` - เสร็จสิ้น
+- `cancelled` - ยกเลิก
+
+**Task Priorities:**
+- `low` - ต่ำ
+- `medium` - ปานกลาง
+- `high` - สูง
+- `urgent` - ด่วน
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Tasks retrieved successfully",
+  "data": [
+    {
+      "id": 1,
+      "farm_id": 1,
+      "title": "รดน้ำต้นมะม่วง",
+      "description": "รดน้ำต้นมะม่วงอกร่อง 10 ต้น",
+      "type": "watering",
+      "priority": "medium",
+      "status": "pending",
+      "due_date": "2024-01-20",
+      "assignments": [
+        {
+          "id": 1,
+          "user_id": 2,
+          "status": "assigned",
+          "user": { "id": 2, "name": "สมหญิง รักสวย" }
+        }
+      ],
+      "creator": { "id": 1, "name": "สมชาย ใจดี" },
+      "is_overdue": false,
+      "created_at": "2024-01-15T10:30:00Z"
+    }
+  ],
+  "meta": { ... }
+}
+```
+
+---
+
+### POST /api/tasks
+
+**คำอธิบาย:** สร้างงานใหม่
+
+**Authentication:** ต้องการ
+
+**Request Body:**
+```json
+{
+  "farm_id": "integer (required)",
+  "title": "string (required)",
+  "description": "string (optional)",
+  "type": "string (optional)",
+  "priority": "string (optional) - low|medium|high|urgent",
+  "status": "string (optional, default: pending)",
+  "due_date": "date (optional)",
+  "plot_id": "integer (optional)",
+  "zone_id": "integer (optional)",
+  "assignments": "array (optional) - รายชื่อ user_id ที่จะมอบหมาย"
+}
+```
+
+**Response 201:**
+```json
+{
+  "success": true,
+  "message": "Task created successfully",
+  "data": {
+    "id": 1,
+    "farm_id": 1,
+    "title": "รดน้ำต้นมะม่วง",
+    "description": "รดน้ำต้นมะม่วงอกร่อง 10 ต้น",
+    "type": "watering",
+    "priority": "medium",
+    "status": "pending",
+    "due_date": "2024-01-20",
+    "assignments": [
+      { "id": 1, "user_id": 2, "status": "assigned" }
+    ],
+    "created_at": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+**Error Codes:**
+- `403` - Forbidden (ไม่มีสิทธิ์เข้าถึงฟาร์มนี้)
+- `422` - Validation error
+
+---
+
+### GET /api/tasks/my
+
+**คำอธิบาย:** ดึงรายการงานที่ถูกมอบหมายให้ผู้ใช้ปัจจุบัน
+
+**Authentication:** ต้องการ
+
+**Query Parameters:** เหมือน GET /api/tasks
+
+**Response 200:** เหมือน GET /api/tasks
+
+---
+
+### GET /api/tasks/{id}
+
+**คำอธิบาย:** ดึงข้อมูลงานตาม ID
+
+**Authentication:** ต้องการ
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Task retrieved successfully",
+  "data": {
+    "id": 1,
+    "farm_id": 1,
+    "title": "รดน้ำต้นมะม่วง",
+    "description": "รดน้ำต้นมะม่วงอกร่อง 10 ต้น",
+    "type": "watering",
+    "priority": "medium",
+    "status": "pending",
+    "due_date": "2024-01-20",
+    "is_overdue": false,
+    "plot": { "id": 1, "name": "แปลง 1" },
+    "zone": { "id": 1, "name": "โซน A" },
+    "farm": { "id": 1, "name": "ฟาร์มสวนผลไม้" },
+    "assignments": [
+      {
+        "id": 1,
+        "user_id": 2,
+        "status": "assigned",
+        "assigned_at": "2024-01-15T10:30:00Z",
+        "user": { "id": 2, "name": "สมหญิง รักสวย" }
+      }
+    ],
+    "creator": { "id": 1, "name": "สมชาย ใจดี" },
+    "created_at": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+**Error Codes:**
+- `403` - Forbidden
+- `404` - Task not found
+
+---
+
+### PUT /api/tasks/{id}
+
+**คำอธิบาย:** อัพเดทข้อมูลงาน
+
+**Authentication:** ต้องการ
+
+**Request Body:**
+```json
+{
+  "title": "string (optional)",
+  "description": "string (optional)",
+  "type": "string (optional)",
+  "priority": "string (optional)",
+  "status": "string (optional)",
+  "due_date": "date (optional)",
+  "plot_id": "integer (optional)",
+  "zone_id": "integer (optional)"
+}
+```
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Task updated successfully",
+  "data": { ... }
+}
+```
+
+**Error Codes:**
+- `403` - Forbidden
+- `404` - Task not found
+- `422` - Validation error
+
+---
+
+### DELETE /api/tasks/{id}
+
+**คำอธิบาย:** ลบงาน
+
+**Authentication:** ต้องการ (Owner/Manager เท่านั้น)
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Task deleted successfully"
+}
+```
+
+**Error Codes:**
+- `403` - Forbidden (ต้องเป็น Owner/Manager ของฟาร์ม)
+- `404` - Task not found
+
+---
+
+### PUT /api/tasks/{id}/assignment-status
+
+**คำอธิบาย:** อัพเดทสถานะการมอบหมายงาน
+
+**Authentication:** ต้องการ
+
+**Request Body:**
+```json
+{
+  "user_id": "integer (required) - ID ของผู้ถูกมอบหมาย",
+  "status": "string (required) - assigned|accepted|rejected|completed",
+  "notes": "string (optional)"
+}
+```
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Assignment status updated successfully",
+  "data": {
+    "id": 1,
+    "task_id": 1,
+    "user_id": 2,
+    "status": "accepted",
+    "notes": null,
+    "assigned_at": "2024-01-15T10:30:00Z",
+    "accepted_at": "2024-01-15T12:00:00Z",
+    "completed_at": null
+  }
+}
+```
+
+**Error Codes:**
+- `403` - Forbidden
+- `422` - Validation error
+
+---
+
+## Problem Reports
+
+### GET /api/problem-reports
+
+**คำอธิบาย:** ดึงรายการรายงานปัญหาทั้งหมด
+
+**Authentication:** ต้องการ
+
+**Query Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| page | int | หมายเลขหน้า |
+| per_page | int | จำนวนรายการต่อหน้า |
+| farm_id | int | กรองตามฟาร์ม |
+| status | string | กรองตามสถานะ |
+| severity | string | กรองตามความรุนแรง |
+
+**Problem Severities:**
+- `low` - ต่ำ
+- `medium` - ปานกลาง
+- `high` - สูง
+- `critical` - วิกฤต
+
+**Problem Statuses:**
+- `reported` - รายงานแล้ว
+- `investigating` - กำลังสอบสวน
+- `resolved` - แก้ไขแล้ว
+- `dismissed` - ไม่พิจารณา
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Problem reports retrieved successfully",
+  "data": [
+    {
+      "id": 1,
+      "farm_id": 1,
+      "title": "ใบมะม่วงเหลือง",
+      "description": "ใบมะม่วงอกร่องเหลืองผิดปกติ",
+      "severity": "medium",
+      "status": "investigating",
+      "symptoms": "ใบเหลืองทั้งใบ",
+      "suspected_cause": "ขาดสารอาหาร",
+      "resolution": null,
+      "plot": { "id": 1, "name": "แปลง 1" },
+      "plant": { "id": 1, "name": "ต้นที่ 1" },
+      "reporter": { "id": 2, "name": "สมหญิง รักสวย" },
+      "created_at": "2024-01-15T10:30:00Z"
+    }
+  ],
+  "meta": { ... }
+}
+```
+
+---
+
+### POST /api/problem-reports
+
+**คำอธิบาย:** สร้างรายงานปัญหาใหม่
+
+**Authentication:** ต้องการ
+
+**Request Body:**
+```json
+{
+  "farm_id": "integer (required)",
+  "title": "string (required)",
+  "description": "string (optional)",
+  "severity": "string (required) - low|medium|high|critical",
+  "status": "string (optional, default: reported)",
+  "symptoms": "string (optional)",
+  "suspected_cause": "string (optional)",
+  "plot_id": "integer (optional)",
+  "plant_id": "integer (optional)",
+  "image_url": "string (optional)"
+}
+```
+
+**Response 201:**
+```json
+{
+  "success": true,
+  "message": "Problem report created successfully",
+  "data": {
+    "id": 1,
+    "farm_id": 1,
+    "title": "ใบมะม่วงเหลือง",
+    "description": "ใบมะม่วงอกร่องเหลืองผิดปกติ",
+    "severity": "medium",
+    "status": "reported",
+    "reporter_id": 2,
+    "created_at": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+**Error Codes:**
+- `403` - Forbidden
+- `422` - Validation error
+
+---
+
+### GET /api/problem-reports/{id}
+
+**คำอธิบาย:** ดึงข้อมูลรายงานปัญหาตาม ID
+
+**Authentication:** ต้องการ
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Problem report retrieved successfully",
+  "data": {
+    "id": 1,
+    "farm_id": 1,
+    "title": "ใบมะม่วงเหลือง",
+    "description": "ใบมะม่วงอกร่องเหลืองผิดปกติ",
+    "severity": "medium",
+    "status": "investigating",
+    "symptoms": "ใบเหลืองทั้งใบ",
+    "suspected_cause": "ขาดสารอาหาร",
+    "resolution": "ใส่ปุ๋ย NPK",
+    "resolved_at": null,
+    "plot": { "id": 1, "name": "แปลง 1" },
+    "plant": { "id": 1, "name": "ต้นที่ 1" },
+    "farm": { "id": 1, "name": "ฟาร์มสวนผลไม้" },
+    "reporter": { "id": 2, "name": "สมหญิง รักสวย" },
+    "created_at": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+**Error Codes:**
+- `403` - Forbidden
+- `404` - Problem report not found
+
+---
+
+### PUT /api/problem-reports/{id}
+
+**คำอธิบาย:** อัพเดทรายงานปัญหา
+
+**Authentication:** ต้องการ
+
+**Request Body:**
+```json
+{
+  "title": "string (optional)",
+  "description": "string (optional)",
+  "severity": "string (optional)",
+  "status": "string (optional)",
+  "symptoms": "string (optional)",
+  "suspected_cause": "string (optional)",
+  "resolution": "string (optional)",
+  "resolved_at": "datetime (optional)"
+}
+```
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Problem report updated successfully",
+  "data": { ... }
+}
+```
+
+**Error Codes:**
+- `403` - Forbidden
+- `404` - Problem report not found
+- `422` - Validation error
+
+---
+
+### DELETE /api/problem-reports/{id}
+
+**คำอธิบาย:** ลบรายงานปัญหา
+
+**Authentication:** ต้องการ
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Problem report deleted successfully"
+}
+```
+
+**Error Codes:**
+- `403` - Forbidden
+- `404` - Problem report not found
+
+---
+
+## Dashboard
+
+### GET /api/dashboard/metrics
+
+**คำอธิบาย:** ดึงข้อมูล Metrics สำหรับ Dashboard
+
+**Authentication:** ต้องการ
+
+**Query Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| farm_id | int | กรองตามฟาร์มเฉพาะ (optional) |
+| start_date | date | วันที่เริ่มต้น (default: วันแรกของเดือน) |
+| end_date | date | วันที่สิ้นสุด (default: วันสุดท้ายของเดือน) |
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Dashboard metrics retrieved successfully",
+  "data": {
+    "structures": {
+      "farms": 2,
+      "zones": 10,
+      "plots": 40,
+      "plants": 300
+    },
+    "activities": {
+      "total": 120
+    },
+    "harvest": {
+      "count": 15,
+      "total_yield": 450.5,
+      "total_value": 45000.00
+    },
+    "problems": {
+      "open": 5,
+      "resolved": 20
+    },
+    "tasks": {
+      "pending": 25,
+      "completed": 60
+    },
+    "period": {
+      "start_date": "2024-01-01",
+      "end_date": "2024-01-31"
+    }
+  }
+}
+```
+
+---
+
+### GET /api/dashboard/today-stats
+
+**คำอธิบาย:** ดึงสถิติวันนี้อย่างย่อ
+
+**Authentication:** ต้องการ
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Today stats retrieved successfully",
+  "data": {
+    "date": "2024-01-15",
+    "activities_today": 12,
+    "pending_tasks": 10,
+    "overdue_tasks": 3,
+    "open_problems": 5,
+    "my_tasks_today": 4
+  }
+}
+```
+
+---
+
+## QR Code
+
+### GET /api/qr/plot/{id}
+
+**คำอธิบาย:** สร้าง QR Code สำหรับแปลง
+
+**Authentication:** ต้องการ
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "QR code generated successfully",
+  "data": {
+    "qr_code": "qr/plot_1_1705312200.svg",
+    "qr_code_url": "/storage/qr/plot_1_1705312200.svg",
+    "qr_data": "{\"type\":\"plot\",\"farm_id\":1,\"farm_name\":\"ฟาร์มสวนผลไม้\",\"zone_id\":1,\"zone_name\":\"โซน A\",\"plot_id\":1,\"plot_name\":\"แปลง 1\"}",
+    "plot": {
+      "id": 1,
+      "name": "แปลง 1",
+      "zone": "โซน A",
+      "farm": "ฟาร์มสวนผลไม้"
+    }
+  }
+}
+```
+
+**Error Codes:**
+- `404` - Plot not found
+
+---
+
+### GET /api/qr/plant/{id}
+
+**คำอธิบาย:** สร้าง QR Code สำหรับต้นไม้
+
+**Authentication:** ต้องการ
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "QR code generated successfully",
+  "data": {
+    "qr_code": "qr/plant_1_1705312200.svg",
+    "qr_code_url": "/storage/qr/plant_1_1705312200.svg",
+    "qr_data": "{\"type\":\"plant\",\"farm_id\":1,\"farm_name\":\"ฟาร์มสวนผลไม้\",\"zone_id\":1,\"zone_name\":\"โซน A\",\"plot_id\":1,\"plot_name\":\"แปลง 1\",\"plant_id\":1,\"plant_name\":\"ต้นที่ 1\"}",
+    "plant": {
+      "id": 1,
+      "name": "ต้นที่ 1",
+      "variety": "มะม่วงอกร่อง",
+      "plot": "แปลง 1",
+      "zone": "โซน A",
+      "farm": "ฟาร์มสวนผลไม้"
+    }
+  }
+}
+```
+
+**Error Codes:**
+- `404` - Plant not found
+
+---
+
+### GET /api/qr/as-image
+
+**คำอธิบาย:** สร้าง QR Code และ return เป็น base64 image
+
+**Authentication:** ต้องการ
+
+**Query Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| type | string | ประเภท (plot หรือ plant) |
+| id | int | ID ของ plot หรือ plant |
+| size | int | ขนาด QR code (default: 300) |
+| margin | int | margin (default: 10) |
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "QR code generated successfully",
+  "data": {
+    "qr_code": "data:image/svg+xml;base64,...",
+    "qr_data": "{\"type\":\"plant\",\"farm_id\":1,...}"
+  }
+}
+```
+
+---
+
+### POST /api/qr/scan
+
+**คำอธิบาย:** Scan QR Code และคืนค่าข้อมูล entity
+
+**Authentication:** ต้องการ
+
+**Request Body:**
+```json
+{
+  "qr_data": "string (required) - ข้อมูล QR code"
+}
+```
+
+**Response 200 (Plot):**
+```json
+{
+  "success": true,
+  "message": "Plot found",
+  "data": {
+    "type": "plot",
+    "entity": {
+      "id": 1,
+      "name": "แปลง 1",
+      "zone_id": 1,
+      ...
+    },
+    "plants_count": 25
+  }
+}
+```
+
+**Response 200 (Plant):**
+```json
+{
+  "success": true,
+  "message": "Plant found",
+  "data": {
+    "type": "plant",
+    "entity": {
+      "id": 1,
+      "name": "ต้นที่ 1",
+      "variety": "มะม่วงอกร่อง",
+      ...
+    },
+    "plot": { ... },
+    "zone": { ... },
+    "farm": { ... }
+  }
+}
+```
+
+**Error Codes:**
+- `400` - Invalid QR code data
+- `404` - Entity not found
+
+---
+
+## LINE Notify
+
+### POST /api/line-notify/send
+
+**คำอธิบาย:** ส่ง LINE Notify message
+
+**Authentication:** ต้องการ
+
+**Request Body:**
+```json
+{
+  "message": "string (required)"
+}
+```
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Notification sent successfully",
+  "data": {
+    "status": 200,
+    "message": "ข้อความที่ส่ง"
+  }
+}
+```
+
+**Error Codes:**
+- `400` - LINE Notify token not configured
+- `500` - Failed to send notification
+
+---
+
+### POST /api/line-notify/send-with-image
+
+**คำอธิบาย:** ส่ง LINE Notify message พร้อมรูปภาพ
+
+**Authentication:** ต้องการ
+
+**Request Body:**
+```json
+{
+  "message": "string (required)",
+  "image_url": "string (optional)"
+}
+```
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Notification sent successfully",
+  "data": {
+    "status": 200,
+    "message": "ข้อความพร้อมรูป"
+  }
+}
+```
+
+---
+
+### POST /api/line-notify/send-task
+
+**คำอธิบาย:** ส่ง notification เกี่ยวกับงาน
+
+**Authentication:** ต้องการ
+
+**Request Body:**
+```json
+{
+  "task_id": "integer (required)",
+  "action": "string (required) - created|assigned|completed|overdue"
+}
+```
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Notification sent successfully",
+  "data": { "status": 200, "message": "📋 [ฟาร์มสวนผลไม้]\nNew task created: รดน้ำต้นมะม่วง\nPriority: medium" }
+}
+```
+
+---
+
+### POST /api/line-notify/send-problem
+
+**คำอธิบาย:** ส่ง notification เกี่ยวกับปัญหา
+
+**Authentication:** ต้องการ
+
+**Request Body:**
+```json
+{
+  "problem_id": "integer (required)",
+  "action": "string (required) - reported|resolved"
+}
+```
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Notification sent successfully",
+  "data": { "status": 200, "message": "🚨 [ฟาร์มสวนผลไม้]\nNew problem reported: ใบมะม่วงเหลือง\nSeverity: medium\nBy: สมหญิง รักสวย" }
+}
+```
+
+---
+
+### POST /api/line-notify/authorize
+
+**คำอธิบาย:** ขอ LINE Notify token
+
+**Authentication:** ต้องการ
+
+**Request Body:**
+```json
+{
+  "code": "string (required) - Authorization code จาก LINE Notify"
+}
+```
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "LINE Notify authorized successfully",
+  "data": {
+    "token": "mytoken..."
+  }
+}
+```
+
+**Error Codes:**
+- `400` - Failed to authorize
+
+---
+
+### DELETE /api/line-notify/revoke
+
+**คำอธิบาย:** ยกเลิก LINE Notify token
+
+**Authentication:** ต้องการ
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "LINE Notify token revoked successfully"
+}
+```
+
+**Error Codes:**
+- `400` - No token found
+
+---
+
+## Common Error Codes
+
+| Code | Description |
+|------|-------------|
+| `400` | Bad Request - คำขอไม่ถูกต้อง |
+| `401` | Unauthorized - ไม่ได้เข้าสู่ระบบ หรือ Token หมดอายุ |
+| `403` | Forbidden - ไม่มีสิทธิ์เข้าถึงทรัพยากรนี้ |
+| `404` | Not Found - ไม่พบทรัพยากรที่ระบุ |
+| `422` | Validation Error - ข้อมูลไม่ถูกต้อง |
+| `429` | Too Many Requests - จำนวนคำขอมากเกินไป |
+| `500` | Internal Server Error - ข้อผิดพลาดภายในเซิร์ฟเวอร์ |
+
+---
+
+## Roles and Permissions
+
+| Role | Permissions |
+|------|-------------|
+| `owner` | ทำได้ทุกอย่างในฟาร์มที่ตนเป็นเจ้าของ |
+| `manager` | จัดการฟาร์ม สร้าง/แก้ไข/ลบ zones, plots, plants, tasks |
+| `worker` | บันทึกกิจกรรม ดูข้อมูล รับมอบหมายงาน |
+| `super_admin` | เข้าถึงได้ทุกฟาร์ม (ระบบ) |
+
+---
+
+## Rate Limiting
+
+| Endpoint Group | Limit |
+|---------------|-------|
+| Authentication (login/register) | 5 requests/minute |
+| Write Operations (POST/PUT/DELETE) | 60 requests/minute |
+| Read Operations (GET) | 120 requests/minute |
+| LINE Notify | 10 requests/minute |
+
+---
+
+*เอกสารนี้สร้างโดย NiSK Dev Team - อัพเดทล่าสุด: 2024*
