@@ -25,20 +25,35 @@ export default function Login() {
 
     if (!savedState || savedState !== returnedState) {
       // CSRF detected — redirect to login without executing
+      // Clear OAuth params from URL to prevent infinite loop
+      window.history.replaceState({}, '', '/login');
       navigate('/login', { replace: true });
       return;
     }
 
     const redirectUri = `${window.location.origin}/login/callback`;
     login(code, redirectUri)
-      .then(() => navigate('/dashboard', { replace: true }))
-      .catch(() => navigate('/login', { replace: true }));
+      .then(() => {
+        // Clear OAuth params before navigating to dashboard
+        window.history.replaceState({}, '', '/dashboard');
+        navigate('/dashboard', { replace: true });
+      })
+      .catch(() => {
+        // Clear OAuth params to prevent infinite loop on retry
+        window.history.replaceState({}, '', '/login');
+        navigate('/login', { replace: true });
+      });
   }, [code, returnedState]);
 
   // ── Normal login page ─────────────────────────────────────────────────
   const handleLineLogin = () => {
     const clientId = import.meta.env.VITE_LINE_CLIENT_ID || 'your-line-client-id';
-    const redirectUri = encodeURIComponent(window.location.origin + '/login/callback');
+    // Use VITE_LINE_REDIRECT_URI if configured (for reverse-proxy setups),
+    // otherwise fall back to current origin
+    const redirectOrigin = import.meta.env.VITE_LINE_REDIRECT_URI
+      ? new URL(import.meta.env.VITE_LINE_REDIRECT_URI).origin
+      : window.location.origin;
+    const redirectUri = encodeURIComponent(`${redirectOrigin}/login/callback`);
     const state = generateState();
     sessionStorage.setItem('oauth_state', state);
     window.location.href = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=openid%20profile&state=${encodeURIComponent(state)}`;

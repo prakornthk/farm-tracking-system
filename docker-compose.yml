@@ -73,6 +73,7 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_LINE_CLIENT_ID: ${VITE_LINE_CLIENT_ID:-}
+        VITE_LINE_REDIRECT_URI: ${VITE_LINE_REDIRECT_URI:-}
     container_name: farm-web-admin
     restart: unless-stopped
     ports:
