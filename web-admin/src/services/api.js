@@ -35,7 +35,7 @@ api.interceptors.response.use(
 
 // Auth
 export const authAPI = {
-  lineLogin: (code, redirectUri) => api.post('/auth/line/callback', { code, redirect_uri: redirectUri }),
+  login: (username, password) => api.post('/auth/login', { username, password }),
   getProfile: () => api.get('/auth/profile'),
   logout: () => api.post('/auth/logout'),
 };

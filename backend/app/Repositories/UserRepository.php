@@ -42,14 +42,6 @@ class UserRepository implements UserRepositoryInterface
     }
 
     /**
-     * Get user by LINE user ID.
-     */
-    public function getByLineId(string $lineUserId)
-    {
-        return User::where('line_user_id', $lineUserId)->first();
-    }
-
-    /**
      * Create a new user.
      */
     public function create(array $data)
@@ -76,41 +68,5 @@ class UserRepository implements UserRepositoryInterface
     {
         $user = User::findOrFail($id);
         return $user->delete();
-    }
-
-    /**
-     * Find or create user by LINE user data.
-     */
-    public function findOrCreateByLine(array $lineUser)
-    {
-        return DB::transaction(function () use ($lineUser) {
-            $lineUserId = $lineUser['user_id'] ?? $lineUser['userId'] ?? null;
-            $displayName = $lineUser['display_name'] ?? $lineUser['displayName'] ?? null;
-            $pictureUrl = $lineUser['picture_url'] ?? $lineUser['pictureUrl'] ?? null;
-
-            if (!$lineUserId) {
-                throw new \InvalidArgumentException('LINE user id is missing from profile payload.');
-            }
-
-            $user = User::where('line_user_id', $lineUserId)->first();
-
-            if (!$user) {
-                $user = User::create([
-                    'line_user_id' => $lineUserId,
-                    'line_display_name' => $displayName,
-                    'line_picture_url' => $pictureUrl,
-                    'name' => $displayName ?? 'LINE User',
-                    'role' => 'worker', // Default role for new LINE users
-                ]);
-            } else {
-                // Update LINE info if changed
-                $user->update([
-                    'line_display_name' => $displayName ?? $user->line_display_name,
-                    'line_picture_url' => $pictureUrl ?? $user->line_picture_url,
-                ]);
-            }
-
-            return $user;
-        });
     }
 }

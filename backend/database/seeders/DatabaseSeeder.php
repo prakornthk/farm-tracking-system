@@ -23,40 +23,40 @@ class DatabaseSeeder extends Seeder
     {
         // Create super admin
         $superAdmin = User::create([
-            'name' => 'Super Admin',
+            'name' => 'admin',
             'email' => 'admin@farm.local',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('11223344'),
             'role' => 'super_admin',
         ]);
 
         // Create owner
         $owner = User::create([
-            'name' => 'Farm Owner',
+            'name' => 'owner',
             'email' => 'owner@farm.local',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('11223344'),
             'role' => 'owner',
         ]);
 
         // Create manager
         $manager = User::create([
-            'name' => 'Farm Manager',
+            'name' => 'manager',
             'email' => 'manager@farm.local',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('11223344'),
             'role' => 'manager',
         ]);
 
         // Create workers
         $worker1 = User::create([
-            'name' => 'Worker One',
+            'name' => 'worker1',
             'email' => 'worker1@farm.local',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('11223344'),
             'role' => 'worker',
         ]);
 
         $worker2 = User::create([
-            'name' => 'Worker Two',
+            'name' => 'worker2',
             'email' => 'worker2@farm.local',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('11223344'),
             'role' => 'worker',
         ]);
 
@@ -314,9 +314,9 @@ class DatabaseSeeder extends Seeder
 
         echo "Database seeded successfully!\n";
         echo "Demo credentials:\n";
-        echo "  Admin: admin@farm.local / password\n";
-        echo "  Owner: owner@farm.local / password\n";
-        echo "  Manager: manager@farm.local / password\n";
-        echo "  Worker: worker1@farm.local / password\n";
+        echo "  Admin: admin@farm.local / 11223344\n";
+        echo "  Owner: owner@farm.local / 11223344\n";
+        echo "  Manager: manager@farm.local / 11223344\n";
+        echo "  Worker: worker1@farm.local / 11223344\n";
     }
 }

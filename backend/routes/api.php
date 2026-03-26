@@ -26,9 +26,10 @@ Route::get('/health', function () {
 
 // Public routes (no authentication required)
 Route::prefix('auth')->middleware('throttle:auth')->group(function () {
-    // LINE Login
-    Route::post('/line/callback', [AuthController::class, 'lineCallback']);
-    Route::post('/line/login', [AuthController::class, 'lineLogin']);
+    // Username/Password Login
+    Route::post('/login', [AuthController::class, 'login']);
+    // Registration (for demo/seeding purposes - restrict in production)
+    Route::post('/register', [AuthController::class, 'register']);
 });
 
 // QR Code scanning (public for quick lookup)

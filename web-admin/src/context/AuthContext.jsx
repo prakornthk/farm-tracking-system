@@ -27,8 +27,8 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
-  const login = async (code, redirectUri) => {
-    const res = await authAPI.lineLogin(code, redirectUri);
+  const login = async (username, password) => {
+    const res = await authAPI.login(username, password);
     const { token, user: userData } = res.data?.data || {};
     if (!token || !userData) {
       throw new Error('Invalid login response');

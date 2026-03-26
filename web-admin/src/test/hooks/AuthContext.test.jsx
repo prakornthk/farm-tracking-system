@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, act } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { AuthProvider, useAuth } from '../../context/AuthContext';
 import { authAPI } from '../../services/api';
 
@@ -17,7 +16,7 @@ function TestConsumer() {
       <span data-testid="isOwner">{isOwner().toString()}</span>
       <span data-testid="isManager">{isManager().toString()}</span>
       <span data-testid="isWorker">{isWorker().toString()}</span>
-      <button onClick={() => login('test-code')}>login</button>
+      <button onClick={() => login('user', 'pass')}>login</button>
       <button onClick={() => logout()}>logout</button>
     </div>
   );
@@ -26,7 +25,7 @@ function TestConsumer() {
 // Mock the entire api module
 vi.mock('../../services/api', () => ({
   authAPI: {
-    lineLogin: vi.fn(),
+    login: vi.fn(),
     logout: vi.fn(),
   },
 }));
@@ -87,7 +86,7 @@ describe('AuthContext', () => {
 
   it('login stores user and token in localStorage', async () => {
     const mockUser = { id: 1, name: 'ผู้ใช้ทดสอบ', role: 'owner' };
-    authAPI.lineLogin.mockResolvedValue({
+    authAPI.login.mockResolvedValue({
       data: { token: 'abc123', user: mockUser },
     });
 

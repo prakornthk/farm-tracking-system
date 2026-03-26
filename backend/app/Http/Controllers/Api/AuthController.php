@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Requests\LineLoginRequest;
 use App\Models\User;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;
 
 class AuthController extends ApiController
@@ -17,83 +16,24 @@ class AuthController extends ApiController
     ) {}
 
     /**
-     * Handle LINE Login callback.
+     * Handle username/password login.
      */
-    public function lineCallback(Request $request): JsonResponse
+    public function login(Request $request): JsonResponse
     {
-        $request->validate([
-            'code' => 'required|string',
-            'redirect_uri' => 'nullable|url',
+        $validated = $request->validate([
+            'username' => 'required|string',
+            'password' => 'required|string',
         ]);
 
-        // Redirect URI used for code exchange must match the URI from authorize step.
-        $redirectUri = $request->input('redirect_uri', config('services.line.redirect'));
+        $user = User::where('email', $validated['username'])
+            ->orWhere('name', $validated['username'])
+            ->first();
 
-        // Exchange authorization code for access token
-        $lineTokenResponse = Http::asForm()->post('https://api.line.me/oauth2/v2.1/token', [
-            'grant_type' => 'authorization_code',
-            'code' => $request->input('code'),
-            'redirect_uri' => $redirectUri,
-            'client_id' => config('services.line.client_id'),
-            'client_secret' => config('services.line.client_secret'),
-        ]);
-
-        if (!$lineTokenResponse->successful()) {
-            return $this->error('Failed to authenticate with LINE', 401);
+        if (!$user || !Hash::check($validated['password'], $user->password)) {
+            return $this->error('Invalid credentials', 401);
         }
 
-        $tokenData = $lineTokenResponse->json();
-
-        // Get LINE user profile
-        $lineAccessToken = $tokenData['access_token'] ?? null;
-        if (!$lineAccessToken) {
-            return $this->error('LINE token exchange did not return access token', 401);
-        }
-
-        $lineProfileResponse = Http::withToken($lineAccessToken)
-            ->get('https://api.line.me/v2/profile');
-
-        if (!$lineProfileResponse->successful()) {
-            return $this->error('Failed to get LINE profile', 401);
-        }
-
-        $lineProfile = $lineProfileResponse->json();
-
-        // Find or create user
-        $user = $this->userRepository->findOrCreateByLine($lineProfile);
-
-        // Create Sanctum token
-        $token = $user->createToken('line-login')->plainTextToken;
-
-        return $this->success([
-            'user' => $user,
-            'token' => $token,
-            'token_type' => 'Bearer',
-        ], 'Login successful');
-    }
-
-    /**
-     * Login with LINE access token directly.
-     */
-    public function lineLogin(LineLoginRequest $request): JsonResponse
-    {
-        $accessToken = $request->input('access_token');
-
-        // Verify access token with LINE
-        $lineProfileResponse = Http::withToken($accessToken)
-            ->get('https://api.line.me/v2/profile');
-
-        if (!$lineProfileResponse->successful()) {
-            return $this->error('Invalid LINE access token', 401);
-        }
-
-        $lineProfile = $lineProfileResponse->json();
-
-        // Find or create user
-        $user = $this->userRepository->findOrCreateByLine($lineProfile);
-
-        // Create Sanctum token
-        $token = $user->createToken('line-login')->plainTextToken;
+        $token = $user->createToken('password-login')->plainTextToken;
 
         return $this->success([
             'user' => $user,
@@ -121,7 +61,8 @@ class AuthController extends ApiController
     }
 
     /**
-     * Register a new user (for admin/system use).
+     * Register a new user (admin only).
+     * NOTE: This endpoint should be protected by admin middleware in production.
      */
     public function register(Request $request): JsonResponse
     {
@@ -129,13 +70,12 @@ class AuthController extends ApiController
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
-            // NOTE: role cannot be set via this endpoint to prevent privilege escalation.
-            // Role assignment must be done through admin endpoints with proper authorization.
+            'role' => 'sometimes|string|in:owner,manager,worker',
         ]);
 
         $data = $validated;
-        // Always set default role to 'worker' - role escalation prevented
-        $data['role'] = 'worker';
+        // Default role to 'worker' if not specified
+        $data['role'] = $data['role'] ?? 'worker';
 
         $user = $this->userRepository->create($data);
         $token = $user->createToken('register')->plainTextToken;

@@ -5,12 +5,129 @@ namespace Tests\Feature\Api;
 use App\Models\User;
 use App\Models\Farm;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class AuthTest extends TestCase
 {
     use RefreshDatabase;
+
+    // ========================================
+    // Auth - Login
+    // ========================================
+
+    /** @test */
+    public function user_can_login_with_email_and_password(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'test@example.com',
+            'password' => Hash::make('password123'),
+        ]);
+
+        $response = $this->postJson('/api/auth/login', [
+            'username' => 'test@example.com',
+            'password' => 'password123',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'success',
+                'message',
+                'data' => [
+                    'user' => ['id', 'name', 'email', 'role'],
+                    'token',
+                    'token_type',
+                ],
+            ])
+            ->assertJson([
+                'success' => true,
+                'message' => 'Login successful',
+                'data' => [
+                    'user' => [
+                        'email' => 'test@example.com',
+                    ],
+                    'token_type' => 'Bearer',
+                ],
+            ]);
+    }
+
+    /** @test */
+    public function user_can_login_with_name_as_username(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'JohnDoe',
+            'email' => 'john@example.com',
+            'password' => Hash::make('password123'),
+        ]);
+
+        $response = $this->postJson('/api/auth/login', [
+            'username' => 'JohnDoe',
+            'password' => 'password123',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'message' => 'Login successful',
+            ]);
+    }
+
+    /** @test */
+    public function login_fails_with_invalid_credentials(): void
+    {
+        User::factory()->create([
+            'email' => 'test@example.com',
+            'password' => Hash::make('password123'),
+        ]);
+
+        $response = $this->postJson('/api/auth/login', [
+            'username' => 'test@example.com',
+            'password' => 'wrongpassword',
+        ]);
+
+        $response->assertStatus(401)
+            ->assertJson([
+                'success' => false,
+                'message' => 'Invalid credentials',
+            ]);
+    }
+
+    /** @test */
+    public function login_fails_with_nonexistent_user(): void
+    {
+        $response = $this->postJson('/api/auth/login', [
+            'username' => 'nonexistent@example.com',
+            'password' => 'password123',
+        ]);
+
+        $response->assertStatus(401)
+            ->assertJson([
+                'success' => false,
+                'message' => 'Invalid credentials',
+            ]);
+    }
+
+    /** @test */
+    public function login_fails_with_missing_username(): void
+    {
+        $response = $this->postJson('/api/auth/login', [
+            'password' => 'password123',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['username']);
+    }
+
+    /** @test */
+    public function login_fails_with_missing_password(): void
+    {
+        $response = $this->postJson('/api/auth/login', [
+            'username' => 'test@example.com',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['password']);
+    }
 
     // ========================================
     // Auth - Register
@@ -211,114 +328,6 @@ class AuthTest extends TestCase
                 'success' => true,
                 'message' => 'Token refreshed successfully',
             ]);
-    }
-
-    // ========================================
-    // Auth - LINE Login
-    // ========================================
-
-    /** @test */
-    public function line_login_with_valid_token_creates_or_finds_user(): void
-    {
-        Http::fake([
-            'api.line.me/v2/profile' => Http::response([
-                'userId' => 'LINE123456',
-                'displayName' => 'LINE User',
-                'pictureUrl' => 'https://example.com/pic.jpg',
-            ], 200),
-        ]);
-
-        $response = $this->postJson('/api/auth/line/login', [
-            'access_token' => 'valid_line_access_token',
-        ]);
-
-        $response->assertStatus(200)
-            ->assertJsonStructure([
-                'success',
-                'message',
-                'data' => [
-                    'user' => ['id', 'name', 'line_user_id', 'role'],
-                    'token',
-                    'token_type',
-                ],
-            ])
-            ->assertJson([
-                'success' => true,
-                'message' => 'Login successful',
-            ]);
-
-        $this->assertDatabaseHas('users', [
-            'line_user_id' => 'LINE123456',
-            'line_display_name' => 'LINE User',
-        ]);
-    }
-
-    /** @test */
-    public function line_login_returns_existing_user_when_line_id_already_exists(): void
-    {
-        $existingUser = User::factory()->create([
-            'line_user_id' => 'LINE123456',
-            'line_display_name' => 'Old Name',
-        ]);
-
-        Http::fake([
-            'api.line.me/v2/profile' => Http::response([
-                'userId' => 'LINE123456',
-                'displayName' => 'Updated Name',
-                'pictureUrl' => 'https://example.com/newpic.jpg',
-            ], 200),
-        ]);
-
-        $response = $this->postJson('/api/auth/line/login', [
-            'access_token' => 'valid_line_access_token',
-        ]);
-
-        $response->assertStatus(200)
-            ->assertJson([
-                'success' => true,
-                'data' => [
-                    'user' => [
-                        'id' => $existingUser->id,
-                        'name' => 'Updated Name',
-                    ],
-                ],
-            ]);
-    }
-
-    /** @test */
-    public function line_login_fails_with_invalid_access_token(): void
-    {
-        Http::fake([
-            'api.line.me/v2/profile' => Http::response(['message' => 'Invalid access token'], 401),
-        ]);
-
-        $response = $this->postJson('/api/auth/line/login', [
-            'access_token' => 'invalid_token',
-        ]);
-
-        $response->assertStatus(401)
-            ->assertJson([
-                'success' => false,
-                'message' => 'Invalid LINE access token',
-            ]);
-    }
-
-    /** @test */
-    public function line_login_fails_without_access_token(): void
-    {
-        $response = $this->postJson('/api/auth/line/login', []);
-
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors(['access_token']);
-    }
-
-    /** @test */
-    public function line_callback_fails_without_code(): void
-    {
-        $response = $this->postJson('/api/auth/line/callback', []);
-
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors(['code']);
     }
 
     // ========================================

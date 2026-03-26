@@ -11,7 +11,7 @@ import { authAPI } from '../../services/api';
 
 vi.mock('../../services/api', () => ({
   authAPI: {
-    lineLogin: vi.fn(),
+    login: vi.fn(),
     logout: vi.fn(),
   },
   dashboardAPI: {
@@ -44,14 +44,14 @@ describe('Login Flow Integration', () => {
   });
 
   describe('Login Page Rendering', () => {
-    it('renders login page with LINE login button', () => {
+    it('renders login page with login form', () => {
       renderWithRouter(
         <Routes><Route path="/login" element={<Login />} /></Routes>,
         { initialEntries: ['/login'] }
       );
 
       expect(screen.getByText('Farm Admin')).toBeInTheDocument();
-      expect(screen.getByText('เข้าสู่ระบบด้วย LINE')).toBeInTheDocument();
+      expect(screen.getByText('เข้าสู่ระบบ')).toBeInTheDocument();
     });
 
     it('renders app description', () => {
@@ -61,26 +61,26 @@ describe('Login Flow Integration', () => {
       );
 
       expect(screen.getByText('ระบบจัดการฟาร์มอัจฉริยะ')).toBeInTheDocument();
-      expect(screen.getByText('กรุณาเข้าสู่ระบบด้วยบัญชี LINE ที่ลงทะเบียนไว้กับฟาร์ม')).toBeInTheDocument();
+      expect(screen.getByText('ติดต่อผู้ดูแลระบบเพื่อขอสร้างบัญชีผู้ใช้')).toBeInTheDocument();
     });
 
-    it('renders LINE SVG icon', () => {
+    it('renders username and password inputs', () => {
       renderWithRouter(
         <Routes><Route path="/login" element={<Login />} /></Routes>,
         { initialEntries: ['/login'] }
       );
 
-      const svg = document.querySelector('svg');
-      expect(svg).toBeInTheDocument();
+      expect(screen.getByLabelText('ชื่อผู้ใช้ / อีเมล')).toBeInTheDocument();
+      expect(screen.getByLabelText('รหัสผ่าน')).toBeInTheDocument();
     });
 
-    it('has LINE button with correct accessibility', () => {
+    it('has submit button with correct text', () => {
       renderWithRouter(
         <Routes><Route path="/login" element={<Login />} /></Routes>,
         { initialEntries: ['/login'] }
       );
 
-      const button = screen.getByRole('button', { name: /เข้าสู่ระบบด้วย LINE/i });
+      const button = screen.getByRole('button', { name: /เข้าสู่ระบบ/i });
       expect(button).toBeInTheDocument();
     });
   });
@@ -174,14 +174,14 @@ describe('Login Flow Integration', () => {
   });
 
   describe('Login Form Submission', () => {
-    it('calls lineLogin and navigates on success', async () => {
-      const mockUser = { id: 1, name: 'ผู้ใช้ LINE', role: 'owner' };
-      vi.mocked(authAPI.lineLogin).mockResolvedValue({
+    it('calls login and navigates on success', async () => {
+      const mockUser = { id: 1, name: 'ผู้ใช้', role: 'owner' };
+      vi.mocked(authAPI.login).mockResolvedValue({
         data: { token: 'mock-token', user: mockUser },
       });
 
       render(
-        <MemoryRouter initialEntries={['/login?code=ABC123&state=xyz']}>
+        <MemoryRouter initialEntries={['/login']}>
           <AuthProvider>
             <Routes>
               <Route path="/login" element={<Login />} />
@@ -190,22 +190,26 @@ describe('Login Flow Integration', () => {
           </AuthProvider>
         </MemoryRouter>
       );
+
+      await userEvent.type(screen.getByLabelText('ชื่อผู้ใช้ / อีเมล'), 'admin@farm.local');
+      await userEvent.type(screen.getByLabelText('รหัสผ่าน'), '11223344');
+      await userEvent.click(screen.getByRole('button', { name: /เข้าสู่ระบบ/i }));
 
       await waitFor(() => {
         expect(screen.getByText('Dashboard')).toBeInTheDocument();
       }, { timeout: 5000 });
 
-      expect(vi.mocked(authAPI.lineLogin)).toHaveBeenCalledWith('ABC123');
+      expect(vi.mocked(authAPI.login)).toHaveBeenCalledWith('admin@farm.local', '11223344');
     });
 
     it('stores token and user in localStorage after login', async () => {
-      const mockUser = { id: 1, name: 'ผู้ใช้ LINE', role: 'owner' };
-      vi.mocked(authAPI.lineLogin).mockResolvedValue({
+      const mockUser = { id: 1, name: 'ผู้ใช้', role: 'owner' };
+      vi.mocked(authAPI.login).mockResolvedValue({
         data: { token: 'mock-token', user: mockUser },
       });
 
       render(
-        <MemoryRouter initialEntries={['/login?code=ABC123&state=xyz']}>
+        <MemoryRouter initialEntries={['/login']}>
           <AuthProvider>
             <Routes>
               <Route path="/login" element={<Login />} />
@@ -214,6 +218,10 @@ describe('Login Flow Integration', () => {
           </AuthProvider>
         </MemoryRouter>
       );
+
+      await userEvent.type(screen.getByLabelText('ชื่อผู้ใช้ / อีเมล'), 'admin@farm.local');
+      await userEvent.type(screen.getByLabelText('รหัสผ่าน'), '11223344');
+      await userEvent.click(screen.getByRole('button', { name: /เข้าสู่ระบบ/i }));
 
       await waitFor(() => {
         expect(localStorage.getItem('token')).toBe('mock-token');
@@ -221,58 +229,32 @@ describe('Login Flow Integration', () => {
       expect(JSON.parse(localStorage.getItem('user') || '{}')).toEqual(mockUser);
     });
 
-    it('redirects to login when state mismatch (CSRF)', async () => {
-      sessionStorage.setItem('oauth_state', 'correct-state');
+    it('shows error message when login fails', async () => {
+      vi.mocked(authAPI.login).mockRejectedValue({
+        response: { data: { message: 'Invalid credentials' } },
+      });
 
-      render(
-        <MemoryRouter initialEntries={['/login?code=ABC123&state=wrong-state']}>
-          <AuthProvider>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/dashboard" element={<div>Dashboard</div>} />
-            </Routes>
-          </AuthProvider>
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('Farm Admin')).toBeInTheDocument();
-      }, { timeout: 3000 });
-
-      expect(vi.mocked(authAPI.lineLogin)).not.toHaveBeenCalled();
-    });
-
-    it('redirects to login when login fails', async () => {
-      vi.mocked(authAPI.lineLogin).mockRejectedValue(new Error('Login failed'));
-
-      render(
-        <MemoryRouter initialEntries={['/login?code=ABC123&state=xyz']}>
-          <AuthProvider>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/dashboard" element={<div>Dashboard</div>} />
-            </Routes>
-          </AuthProvider>
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('Farm Admin')).toBeInTheDocument();
-      }, { timeout: 3000 });
-    });
-
-    it('does not execute login when no code in URL', () => {
       render(
         <MemoryRouter initialEntries={['/login']}>
           <AuthProvider>
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/dashboard" element={<div>Dashboard</div>} />
             </Routes>
           </AuthProvider>
         </MemoryRouter>
       );
 
-      expect(vi.mocked(authAPI.lineLogin)).not.toHaveBeenCalled();
+      await userEvent.type(screen.getByLabelText('ชื่อผู้ใช้ / อีเมล'), 'wrong@email.com');
+      await userEvent.type(screen.getByLabelText('รหัสผ่าน'), 'wrongpass');
+      await userEvent.click(screen.getByRole('button', { name: /เข้าสู่ระบบ/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText('Invalid credentials')).toBeInTheDocument();
+      }, { timeout: 5000 });
+
+      // Should still be on login page
+      expect(screen.getByText('Farm Admin')).toBeInTheDocument();
     });
   });
 
