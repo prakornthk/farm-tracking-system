@@ -105,42 +105,36 @@ export default function Zones() {
           action={isManager() ? { label: 'เพิ่มโซน', onClick: openCreate } : null}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="space-y-2">
           {zones.map((zone) => (
-            <div key={zone.id} className="card-padded card-hover group">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="p-2 bg-primary-50 rounded-lg">
-                    <Map size={16} className="text-primary-600" />
-                  </span>
-                </div>
-                {isManager() && (
-                  <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => openEdit(zone)}
-                      className="btn-icon"
-                      aria-label={`แก้ไขโซน ${zone.name}`}
-                    >
-                      <Edit2 size={14} aria-hidden="true" />
-                    </button>
-                    <button
-                      onClick={() => setDeleteTarget(zone)}
-                      className="btn-icon hover:text-red-600"
-                      aria-label={`ลบโซน ${zone.name}`}
-                    >
-                      <Trash2 size={14} aria-hidden="true" />
-                    </button>
-                  </div>
+            <div key={zone.id} className="zone-row group">
+              <div className="zone-row-indicator">
+                <Grid3x3 size={18} className="text-info" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-semibold text-gray-900">{zone.name}</h3>
+                {zone.description && (
+                  <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{zone.description}</p>
                 )}
               </div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-1">{zone.name}</h3>
-              {zone.description && <p className="text-xs text-gray-400 mb-3 line-clamp-2">{zone.description}</p>}
-              <Link
-                to={`/zones/${zone.id}/plots`}
-                className="inline-flex items-center gap-1 text-xs text-primary-600 font-medium hover:underline"
-              >
-                ดูแปลง <ChevronRight size={12} />
-              </Link>
+              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                {isManager() && (
+                  <>
+                    <button onClick={() => openEdit(zone)} className="btn-icon" aria-label={`แก้ไขโซน ${zone.name}`}>
+                      <Edit2 size={14} />
+                    </button>
+                    <button onClick={() => setDeleteTarget(zone)} className="btn-icon hover:text-red-600" aria-label={`ลบโซน ${zone.name}`}>
+                      <Trash2 size={14} />
+                    </button>
+                  </>
+                )}
+                <Link
+                  to={`/zones/${zone.id}/plots`}
+                  className="btn btn-secondary text-xs py-1.5 px-3 flex items-center gap-1"
+                >
+                  เปิด <ChevronRight size={12} />
+                </Link>
+              </div>
             </div>
           ))}
         </div>

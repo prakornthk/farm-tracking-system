@@ -105,49 +105,40 @@ export default function Plots() {
           action={isManager() ? { label: 'เพิ่มแปลง', onClick: openCreate } : null}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="space-y-2">
           {plots.map((plot) => (
-            <div key={plot.id} className="card-padded card-hover group">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="p-2 bg-green-50 rounded-lg">
-                    <Sprout size={16} className="text-green-600" />
+            <div key={plot.id} className="plot-row group">
+              <div className="plot-row-indicator">
+                <Sprout size={18} className="text-amber-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-semibold text-gray-900">{plot.name}</h3>
+                <div className="flex items-center gap-3 mt-0.5">
+                  {plot.plant_type && (
+                    <span className="text-xs text-gray-400">{plot.plant_type}</span>
+                  )}
+                  {plot.size && (
+                    <span className="text-xs text-gray-400">{plot.size} ตร.ม.</span>
+                  )}
+                  <span className={`badge text-xs ${STATUS_COLORS[plot.status] || STATUS_COLORS.active}`}>
+                    {plot.status === 'active' ? 'พร้อม' : plot.status === 'fallow' ? 'ว่าง' : plot.status}
                   </span>
                 </div>
-                {isManager() && (
-                  <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => openEdit(plot)}
-                      className="btn-icon"
-                      aria-label={`แก้ไขแปลง ${plot.name}`}
-                    >
-                      <Edit2 size={14} aria-hidden="true" />
-                    </button>
-                    <button
-                      onClick={() => setDeleteTarget(plot)}
-                      className="btn-icon hover:text-red-600"
-                      aria-label={`ลบแปลง ${plot.name}`}
-                    >
-                      <Trash2 size={14} aria-hidden="true" />
-                    </button>
-                  </div>
-                )}
               </div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-1">{plot.name}</h3>
-              {plot.plant_type && (
-                <p className="text-xs text-gray-400 mb-1 flex items-center gap-1">
-                  <Sprout size={10} />{plot.plant_type}
-                </p>
-              )}
-              {plot.size && (
-                <p className="text-xs text-gray-400 mb-3 flex items-center gap-1">
-                  📐 {plot.size} ตร.ม.
-                </p>
-              )}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                {isManager() && (
+                  <>
+                    <button onClick={() => openEdit(plot)} className="btn-icon" aria-label={`แก้ไขแปลง ${plot.name}`}>
+                      <Edit2 size={14} />
+                    </button>
+                    <button onClick={() => setDeleteTarget(plot)} className="btn-icon hover:text-red-600" aria-label={`ลบแปลง ${plot.name}`}>
+                      <Trash2 size={14} />
+                    </button>
+                  </>
+                )}
                 <Link
                   to={`/plots/${plot.id}/plants`}
-                  className="inline-flex items-center gap-1 text-xs text-primary-600 font-medium hover:underline"
+                  className="btn btn-secondary text-xs py-1.5 px-3 flex items-center gap-1"
                 >
                   ดูต้นไม้ <ChevronRight size={12} />
                 </Link>

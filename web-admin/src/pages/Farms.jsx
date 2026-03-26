@@ -86,41 +86,44 @@ export default function Farms() {
           action={isManager() ? { label: 'เพิ่มฟาร์ม', onClick: openCreate } : null}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="space-y-2">
           {farms.map((farm) => (
-            <div key={farm.id} className="card-padded card-hover group">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="p-2 bg-primary-50 rounded-lg">
-                    <Map size={16} className="text-primary-600" />
-                  </span>
+            <div
+              key={farm.id}
+              className="farm-row group"
+            >
+              <div className="farm-row-indicator" aria-hidden="true">
+                <Map size={18} className="text-primary-600" />
+              </div>
+              <div className="farm-row-content flex-1 min-w-0">
+                <div className="flex items-baseline gap-3 flex-wrap">
+                  <h3 className="text-base font-semibold text-gray-900">{farm.name}</h3>
+                  {farm.location && (
+                    <span className="text-xs text-gray-400">{farm.location}</span>
+                  )}
                 </div>
-                {isManager() && (
-                  <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => openEdit(farm)} className="btn-icon" aria-label={`แก้ไขฟาร์ม ${farm.name}`}>
-                      <Edit2 size={14} aria-hidden="true" />
-                    </button>
-                    <button onClick={() => setDeleteTarget(farm)} className="btn-icon hover:text-red-600" aria-label={`ลบฟาร์ม ${farm.name}`}>
-                      <Trash2 size={14} aria-hidden="true" />
-                    </button>
-                  </div>
+                {farm.description && (
+                  <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{farm.description}</p>
                 )}
               </div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-1">{farm.name}</h3>
-              {farm.location && (
-                <p className="text-xs text-gray-400 mb-2 flex items-center gap-1">
-                  <Map size={10} />{farm.location}
-                </p>
-              )}
-              {farm.description && (
-                <p className="text-xs text-gray-400 mb-3 line-clamp-2">{farm.description}</p>
-              )}
-              <Link
-                to={`/farms/${farm.id}/zones`}
-                className="inline-flex items-center gap-1 text-xs text-primary-600 font-medium hover:underline"
-              >
-                ดูโซน <ChevronRight size={12} />
-              </Link>
+              <div className="farm-row-actions flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                {isManager() && (
+                  <>
+                    <button onClick={() => openEdit(farm)} className="btn-icon" aria-label={`แก้ไขฟาร์ม ${farm.name}`}>
+                      <Edit2 size={14} />
+                    </button>
+                    <button onClick={() => setDeleteTarget(farm)} className="btn-icon hover:text-red-600" aria-label={`ลบฟาร์ม ${farm.name}`}>
+                      <Trash2 size={14} />
+                    </button>
+                  </>
+                )}
+                <Link
+                  to={`/farms/${farm.id}/zones`}
+                  className="btn btn-secondary text-xs py-1.5 px-3 flex items-center gap-1"
+                >
+                  เปิด <ChevronRight size={12} />
+                </Link>
+              </div>
             </div>
           ))}
         </div>

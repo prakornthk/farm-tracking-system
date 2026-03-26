@@ -117,42 +117,46 @@ export default function Plants() {
           action={isManager() ? { label: 'เพิ่มต้นไม้', onClick: openCreate } : null}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="space-y-2">
           {plants.map((plant) => (
-            <div key={plant.id} className="card-padded card-hover group">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="p-2 bg-green-50 rounded-lg">
-                    <Sprout size={16} className="text-green-600" />
+            <div key={plant.id} className="plant-row group">
+              <div className="plant-row-indicator">
+                <Sprout size={18} className="text-primary-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline gap-3 flex-wrap">
+                  <h3 className="text-base font-semibold text-gray-900">{plant.name}</h3>
+                  <span className={`badge text-xs ${STATUS_COLORS[plant.status] || 'bg-gray-100 text-gray-600'}`}>
+                    {plant.status === 'healthy' ? 'สุขภาพดี' : plant.status === 'warning' ? 'เตือน' : plant.status === 'sick' ? 'ป่วย' : plant.status}
                   </span>
                 </div>
-                {isManager() && (
-                  <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => openEdit(plant)}
-                      className="btn-icon"
-                      aria-label={`แก้ไขต้นไม้ ${plant.name}`}
-                    >
-                      <Edit2 size={14} aria-hidden="true" />
-                    </button>
-                    <button
-                      onClick={() => setDeleteTarget(plant)}
-                      className="btn-icon hover:text-red-600"
-                      aria-label={`ลบต้นไม้ ${plant.name}`}
-                    >
-                      <Trash2 size={14} aria-hidden="true" />
-                    </button>
-                  </div>
-                )}
+                <div className="flex items-center gap-3 mt-0.5">
+                  {plant.planted_date && (
+                    <span className="text-xs text-gray-400">ปลูกเมื่อ {plant.planted_date}</span>
+                  )}
+                  {plant.variety && (
+                    <span className="text-xs text-gray-400">{plant.variety}</span>
+                  )}
+                </div>
               </div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-1">{plant.name}</h3>
-              <span className={`badge ${STATUS_COLORS[plant.status] || STATUS_COLORS.healthy} capitalize`}>
-                {plant.status === 'healthy' ? 'สุขภาพดี' : plant.status === 'warning' ? 'เตือน' : plant.status === 'sick' ? 'ป่วย' : 'ตาย'}
-              </span>
-              {plant.planted_date && (
-                <p className="text-xs text-gray-400 mt-2">ปลูกเมื่อ: {plant.planted_date}</p>
-              )}
-              {plant.notes && <p className="text-xs text-gray-400 mt-2 line-clamp-2">{plant.notes}</p>}
+              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                {isManager() && (
+                  <>
+                    <button onClick={() => openEdit(plant)} className="btn-icon" aria-label={`แก้ไขต้นไม้ ${plant.name}`}>
+                      <Edit2 size={14} />
+                    </button>
+                    <button onClick={() => setDeleteTarget(plant)} className="btn-icon hover:text-red-600" aria-label={`ลบต้นไม้ ${plant.name}`}>
+                      <Trash2 size={14} />
+                    </button>
+                  </>
+                )}
+                <Link
+                  to={`/plots/${plotId}/qr`}
+                  className="btn btn-secondary text-xs py-1.5 px-3"
+                >
+                  QR
+                </Link>
+              </div>
             </div>
           ))}
         </div>
