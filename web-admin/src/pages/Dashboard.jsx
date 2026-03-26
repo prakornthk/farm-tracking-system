@@ -239,31 +239,34 @@ export default function Dashboard() {
       )}
 
       {/* Quick Links */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <Link to="/tasks" className="card-padded card-hover flex items-center gap-3 group">
-          <span className="p-2 bg-orange-50 rounded-lg"><ClipboardList className="text-orange-500" size={18} /></span>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900">งานทั้งหมด</p>
-            <p className="text-xs text-gray-400 mt-0.5">ดูและจัดการงาน</p>
-          </div>
-          <ArrowRight size={14} className="text-gray-300 group-hover:text-gray-500 transition-colors flex-shrink-0" />
-        </Link>
-        <Link to="/problems" className="card-padded card-hover flex items-center gap-3 group">
-          <span className="p-2 bg-red-50 rounded-lg"><AlertTriangle className="text-red-500" size={18} /></span>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900">ปัญหา</p>
-            <p className="text-xs text-gray-400 mt-0.5">รายงานปัญหาที่พบ</p>
-          </div>
-          <ArrowRight size={14} className="text-gray-300 group-hover:text-gray-500 transition-colors flex-shrink-0" />
-        </Link>
-        <Link to="/farms" className="card-padded card-hover flex items-center gap-3 group">
-          <span className="p-2 bg-green-50 rounded-lg"><Map className="text-green-600" size={18} /></span>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900">ฟาร์ม</p>
-            <p className="text-xs text-gray-400 mt-0.5">จัดการฟาร์มและโซน</p>
-          </div>
-          <ArrowRight size={14} className="text-gray-300 group-hover:text-gray-500 transition-colors flex-shrink-0" />
-        </Link>
+      <div>
+        <h2 className="text-base font-semibold text-gray-900 mb-3">ลิงก์ด่วน</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Link to="/tasks" className="card-padded card-hover flex items-center gap-3 group">
+            <span className="p-2 bg-orange-50 rounded-lg ring-1 ring-orange-100 flex-shrink-0"><ClipboardList className="text-orange-500" size={18} /></span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-900">งานทั้งหมด</p>
+              <p className="text-xs text-gray-600 mt-0.5">ดูและจัดการงาน</p>
+            </div>
+            <ArrowRight size={14} className="text-gray-400 group-hover:text-orange-500 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+          </Link>
+          <Link to="/problems" className="card-padded card-hover flex items-center gap-3 group">
+            <span className="p-2 bg-red-50 rounded-lg ring-1 ring-red-100 flex-shrink-0"><AlertTriangle className="text-red-500" size={18} /></span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-900">ปัญหา</p>
+              <p className="text-xs text-gray-600 mt-0.5">รายงานปัญหาที่พบ</p>
+            </div>
+            <ArrowRight size={14} className="text-gray-400 group-hover:text-red-500 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+          </Link>
+          <Link to="/farms" className="card-padded card-hover flex items-center gap-3 group">
+            <span className="p-2 bg-green-50 rounded-lg ring-1 ring-green-100 flex-shrink-0"><Map className="text-green-600" size={18} /></span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-900">ฟาร์ม</p>
+              <p className="text-xs text-gray-600 mt-0.5">จัดการฟาร์มและโซน</p>
+            </div>
+            <ArrowRight size={14} className="text-gray-400 group-hover:text-green-600 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+          </Link>
+        </div>
       </div>
     </div>
   );
