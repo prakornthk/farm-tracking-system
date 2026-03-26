@@ -41,6 +41,11 @@ export const setAuthToken = (token) => {
   }
 }
 
+// Demo mode flag — when true, app bypasses real backend auth
+let _demoMode = false
+export const isDemoMode = () => _demoMode
+export const setDemoMode = (value) => { _demoMode = Boolean(value) }
+
 // Response interceptor for offline handling
 api.interceptors.response.use(
   (response) => response,

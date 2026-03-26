@@ -7,7 +7,10 @@ import * as api from '../services/api'
 
 vi.mock('../services/api', () => ({
   logActivity: vi.fn(),
-  addToOfflineQueue: vi.fn()
+  addToOfflineQueue: vi.fn(),
+  setDemoMode: vi.fn(),
+  loginWithLineAccessToken: vi.fn(),
+  setAuthToken: vi.fn()
 }))
 
 const defaultProps = {

@@ -5,7 +5,10 @@ import useOffline from '../hooks/useOffline'
 import * as api from '../services/api'
 
 vi.mock('../services/api', () => ({
-  syncOfflineQueue: vi.fn()
+  syncOfflineQueue: vi.fn(),
+  setDemoMode: vi.fn(),
+  loginWithLineAccessToken: vi.fn(),
+  setAuthToken: vi.fn()
 }))
 
 describe('useOffline', () => {
