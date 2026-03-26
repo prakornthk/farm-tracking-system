@@ -4,7 +4,7 @@ import useOffline from './hooks/useOffline'
 import Header from './components/Header'
 import LoginPage from './pages/LoginPage'
 import SuccessPage from './pages/SuccessPage'
-import { loginWithLineAccessToken } from './services/api'
+import { loginWithLineAccessToken, setDemoMode } from './services/api'
 
 // Lazy-load pages for code splitting — reduces initial bundle
 const LazyScanPage      = React.lazy(() => import('./pages/ScanPage'))
@@ -53,6 +53,12 @@ const App = () => {
       try {
         await loginWithLineAccessToken(accessToken)
       } catch (e) {
+        if (accessToken === 'mock-access-token' && e?.response?.status === 401) {
+          setDemoMode(true)
+        }
+        // #region agent log
+        fetch('http://localhost:7352/ingest/67de65b0-b786-4529-b216-6d987234dbf1',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f86896'},body:JSON.stringify({sessionId:'f86896',runId:'post-fix',hypothesisId:'H7',location:'liff-app/src/App.jsx:69',message:'Backend auth sync failed',data:{isMockAccessToken:accessToken==='mock-access-token',status:e?.response?.status||null,responseMessage:e?.response?.data?.message||null},timestamp:Date.now()})}).catch(()=>{})
+        // #endregion
         authSyncRef.current = false
       }
     }
