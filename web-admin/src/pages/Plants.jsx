@@ -92,17 +92,17 @@ export default function Plants() {
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-lg">
+        <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">ต้นไม้ในแปลง</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">ต้นไม้ในแปลง</h1>
+          <p className="text-sm text-gray-500 mt-0.5">แปลง #{plotId}</p>
+        </div>
       </div>
-
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-gray-500">แปลง #{plotId}</p>
         {isManager() && (
-          <button onClick={openCreate} className="btn btn-primary flex items-center gap-2">
-            <Plus size={18} />
+          <button onClick={openCreate} className="btn btn-primary">
+            <Plus size={16} />
             เพิ่มต้นไม้
           </button>
         )}
@@ -118,48 +118,52 @@ export default function Plants() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {plants.map((plant) => (
-            <div key={plant.id} className="card p-5 hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between mb-2">
-                <div className="text-2xl">🌱</div>
+            <div key={plant.id} className="card-padded card-hover group">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="p-2 bg-green-50 rounded-lg">
+                    <Sprout size={16} className="text-green-600" />
+                  </span>
+                </div>
                 {isManager() && (
-                  <div className="flex gap-1">
+                  <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => openEdit(plant)}
-                      className="p-1.5 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50"
+                      className="btn-icon"
                       aria-label={`แก้ไขต้นไม้ ${plant.name}`}
                     >
-                      <Edit2 size={16} aria-hidden="true" />
+                      <Edit2 size={14} aria-hidden="true" />
                     </button>
                     <button
                       onClick={() => setDeleteTarget(plant)}
-                      className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50"
+                      className="btn-icon hover:text-red-600"
                       aria-label={`ลบต้นไม้ ${plant.name}`}
                     >
-                      <Trash2 size={16} aria-hidden="true" />
+                      <Trash2 size={14} aria-hidden="true" />
                     </button>
                   </div>
                 )}
               </div>
-              <h3 className="font-semibold text-gray-900 mb-1">{plant.name}</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-1">{plant.name}</h3>
               <span className={`badge ${STATUS_COLORS[plant.status] || STATUS_COLORS.healthy} capitalize`}>
                 {plant.status === 'healthy' ? 'สุขภาพดี' : plant.status === 'warning' ? 'เตือน' : plant.status === 'sick' ? 'ป่วย' : 'ตาย'}
               </span>
               {plant.planted_date && (
                 <p className="text-xs text-gray-400 mt-2">ปลูกเมื่อ: {plant.planted_date}</p>
               )}
-              {plant.notes && <p className="text-sm text-gray-500 mt-2 line-clamp-2">{plant.notes}</p>}
+              {plant.notes && <p className="text-xs text-gray-400 mt-2 line-clamp-2">{plant.notes}</p>}
             </div>
           ))}
         </div>
       )}
 
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
-            <h2 className="text-lg font-semibold mb-4">{editPlant ? 'แก้ไขต้นไม้' : 'เพิ่มต้นไม้ใหม่'}</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-5">{editPlant ? 'แก้ไขต้นไม้' : 'เพิ่มต้นไม้ใหม่'}</h2>
             <form onSubmit={handleSubmit} className="space-y-4" aria-label={editPlant ? 'แก้ไขต้นไม้' : 'เพิ่มต้นไม้ใหม่'}>
               <div>
-                <label htmlFor="plant-name" className="block text-sm font-medium text-gray-700 mb-1">ชื่อต้นไม้ *</label>
+                <label htmlFor="plant-name" className="label">ชื่อต้นไม้ *</label>
                 <input
                   id="plant-name"
                   type="text"
@@ -170,7 +174,7 @@ export default function Plants() {
                 />
               </div>
               <div>
-                <label htmlFor="plant-status" className="block text-sm font-medium text-gray-700 mb-1">สถานะ</label>
+                <label htmlFor="plant-status" className="label">สถานะ</label>
                 <select
                   id="plant-status"
                   className="input"
@@ -184,7 +188,7 @@ export default function Plants() {
                 </select>
               </div>
               <div>
-                <label htmlFor="plant-date" className="block text-sm font-medium text-gray-700 mb-1">วันที่ปลูก</label>
+                <label htmlFor="plant-date" className="label">วันที่ปลูก</label>
                 <input
                   id="plant-date"
                   type="date"
@@ -194,7 +198,7 @@ export default function Plants() {
                 />
               </div>
               <div>
-                <label htmlFor="plant-notes" className="block text-sm font-medium text-gray-700 mb-1">บันทึก</label>
+                <label htmlFor="plant-notes" className="label">บันทึก</label>
                 <textarea
                   id="plant-notes"
                   className="input"
@@ -204,7 +208,7 @@ export default function Plants() {
                   placeholder="บันทึกเพิ่มเติม..."
                 />
               </div>
-              {formError && <p className="text-sm text-red-600">{formError}</p>}
+              {formError && <p className="text-sm text-danger" role="alert">{formError}</p>}
               <div className="flex gap-3 justify-end pt-2">
                 <button type="button" onClick={() => setShowForm(false)} className="btn btn-secondary">
                   ยกเลิก
