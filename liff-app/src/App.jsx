@@ -266,7 +266,7 @@ const App = () => {
         onViewChange={handleViewChange}
       />
 
-      <main id="main-content" style={{ paddingTop: isOnline ? 0 : '60px' }}>
+      <main id="main-content" style={{ paddingTop: isOnline ? 0 : '96px' }}>
         <React.Suspense fallback={<SuspenseFallback />}>
           {renderContent()}
         </React.Suspense>

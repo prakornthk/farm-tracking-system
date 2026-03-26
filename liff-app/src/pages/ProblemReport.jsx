@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import PhotoUpload from '../components/PhotoUpload'
 import { submitProblemReport, addToOfflineQueue } from '../services/api'
 
@@ -25,6 +25,13 @@ const ProblemReport = React.memo(({ type, id, onBack, onSuccess, isOnline }) => 
   const [photoPreview,    setPhotoPreview]    = useState(null)
   const [loading,         setLoading]         = useState(false)
   const [error,            setError]            = useState(null)
+
+  // Clean up object URL on unmount or when preview changes to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (photoPreview) URL.revokeObjectURL(photoPreview)
+    }
+  }, [photoPreview])
 
   const handlePhotoSelected = useCallback((file) => {
     if (photoPreview) URL.revokeObjectURL(photoPreview)
