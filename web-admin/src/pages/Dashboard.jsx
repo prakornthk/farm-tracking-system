@@ -97,89 +97,63 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Main Stats Cards - 7 metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3 mb-8">
-        {/* 1. Total Plants */}
-        <Link to="/farms" className="card-padded card-hover group">
-          <div className="inline-flex p-2 rounded-lg mb-3 bg-green-50 ring-1 ring-green-100">
-            <Sprout size={18} className="text-green-600" />
+      {/* Stats — asymmetric layout, breaking hero-metric template */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+        {/* Primary: Plants overview — featured, larger */}
+        <Link to="/farms" className="card-padded card-hover group lg:col-span-2 lg:flex lg:items-center lg:gap-6">
+          <div className="flex items-center gap-4">
+            <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-green-50 ring-1 ring-green-100 flex items-center justify-center">
+              <Sprout size={24} className="text-green-600" />
+            </div>
+            <div>
+              <p className="text-5xl font-bold text-gray-900 leading-none tracking-tight">
+                {metrics.total_plants ?? 0}
+              </p>
+              <p className="text-base font-medium text-gray-500 mt-1">ต้นไม้ทั้งหมด</p>
+            </div>
           </div>
-          <p className="text-3xl font-bold text-gray-900 leading-none tracking-tight">
-            {metrics.total_plants ?? 0}
-          </p>
-          <p className="text-sm text-gray-600 mt-1.5 font-medium">ต้นไม้ทั้งหมด</p>
+          <div className="mt-4 lg:mt-0 lg:ml-auto flex flex-wrap gap-6">
+            <div className="text-right">
+              <p className="text-2xl font-bold text-gray-900 leading-none">{metrics.total_plots ?? 0}</p>
+              <p className="text-xs text-gray-400 mt-0.5">แปลง</p>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-green-700 leading-none">{(metrics.total_yield ?? 0).toLocaleString()}<span className="text-sm font-medium ml-0.5">kg</span></p>
+              <p className="text-xs text-gray-400 mt-0.5">ผลผลิตรวม</p>
+            </div>
+          </div>
         </Link>
 
-        {/* 2. Total Plots */}
-        <Link to="/farms" className="card-padded card-hover group">
-          <div className="inline-flex p-2 rounded-lg mb-3 bg-blue-50 ring-1 ring-blue-100">
-            <Map size={18} className="text-blue-600" />
-          </div>
-          <p className="text-3xl font-bold text-gray-900 leading-none tracking-tight">
-            {metrics.total_plots ?? 0}
-          </p>
-          <p className="text-sm text-gray-600 mt-1.5 font-medium">แปลงทั้งหมด</p>
-        </Link>
-
-        {/* 3. Today Tasks */}
+        {/* Secondary: Today's tasks */}
         <Link to="/tasks" className="card-padded card-hover group">
-          <div className="inline-flex p-2 rounded-lg mb-3 bg-orange-50 ring-1 ring-orange-100">
-            <ClipboardList size={18} className="text-orange-600" />
+          <div className="flex items-center gap-3 mb-3">
+            <ClipboardList size={20} className="text-orange-500" />
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">งานวันนี้</span>
           </div>
-          <p className="text-3xl font-bold text-gray-900 leading-none tracking-tight">
+          <p className="text-4xl font-bold text-gray-900 leading-none tracking-tight">
             {metrics.today_tasks ?? 0}
           </p>
-          <p className="text-sm text-gray-600 mt-1.5 font-medium">งานวันนี้</p>
-        </Link>
-
-        {/* 4. Completed Tasks Today */}
-        <Link to="/tasks" className="card-padded card-hover group">
-          <div className="inline-flex p-2 rounded-lg mb-3 bg-green-100 ring-1 ring-green-200">
-            <CheckCircle2 size={18} className="text-green-700" />
+          <div className="flex items-baseline gap-2 mt-2">
+            <span className="text-sm font-medium text-green-700">{metrics.completed_tasks_today ?? 0} เสร็จ</span>
+            <span className="text-xs text-gray-400">· {metrics.tasks?.pending ?? 0} ค้าง</span>
           </div>
-          <p className="text-3xl font-bold text-gray-900 leading-none tracking-tight">
-            {metrics.completed_tasks_today ?? 0}
-          </p>
-          <p className="text-sm text-gray-600 mt-1.5 font-medium">งานเสร็จวันนี้</p>
-        </Link>
-
-        {/* 5. Total Yield */}
-        <Link to="/farms" className="card-padded card-hover group">
-          <div className="inline-flex p-2 rounded-lg mb-3 bg-amber-50 ring-1 ring-amber-100">
-            <Wheat size={18} className="text-amber-600" />
-          </div>
-          <p className="text-3xl font-bold text-gray-900 leading-none tracking-tight">
-            {(metrics.total_yield ?? 0).toLocaleString()}
-          </p>
-          <p className="text-sm text-gray-600 mt-1.5 font-medium">ผลผลิตรวม (kg)</p>
-        </Link>
-
-        {/* 6. Open Problems — critical, visually emphasized */}
-        <Link to="/problems" className="card-padded card-hover group ring-2 ring-red-200 bg-red-50/40">
-          <div className="inline-flex p-2 rounded-lg mb-3 bg-red-100 ring-1 ring-red-200">
-            <AlertTriangle size={18} className="text-red-600" />
-          </div>
-          <p className="text-3xl font-bold text-red-700 leading-none tracking-tight">
-            {metrics.problems?.open ?? 0}
-          </p>
-          <p className="text-sm text-red-600 mt-1.5 font-semibold">ปัญหาเปิด</p>
-        </Link>
-
-        {/* 7. Pending Tasks */}
-        <Link to="/tasks" className="card-padded card-hover group">
-          <div className="inline-flex p-2 rounded-lg mb-3 bg-yellow-50 ring-1 ring-yellow-100">
-            <TrendingUp size={18} className="text-yellow-600" />
-          </div>
-          <p className="text-3xl font-bold text-gray-900 leading-none tracking-tight">
-            {metrics.tasks?.pending ?? 0}
-          </p>
-          <p className="text-sm text-gray-600 mt-1.5 font-medium">งานค้าง</p>
         </Link>
       </div>
 
+      {/* Problems row — only show when open > 0 */}
+      {metrics.problems?.open > 0 && (
+        <Link to="/problems" className="block card-padded mb-8 border-l-4 border-red-400 bg-red-50/50 hover:bg-red-50 transition-colors">
+          <div className="flex items-center gap-3">
+            <AlertTriangle size={20} className="text-red-500" />
+            <span className="text-sm font-semibold text-red-700">{metrics.problems?.open ?? 0} ปัญหาที่ยังเปิดอยู่</span>
+            <span className="text-xs text-red-400 ml-auto">ดูรายละเอียด →</span>
+          </div>
+        </Link>
+      )}
+
       {/* Plant Status Breakdown */}
       {metrics.plant_status_breakdown && Object.keys(metrics.plant_status_breakdown).length > 0 && (
-        <div className="card-padded mb-8">
+        <div className="mb-8">
           <div className="flex items-center gap-2 mb-4">
             <h2 className="text-base font-semibold text-gray-900">สถานะต้นไม้</h2>
             <span className="text-xs text-gray-400 font-normal">

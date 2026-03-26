@@ -56,52 +56,39 @@ const ScanPage = ({ type, id, onSelectAction }) => {
 
   return (
     <div className="container">
-      {/* Target Info Card */}
-      <div className="card card-padded" style={{ textAlign: 'center' }}>
-        <div style={{
-          width: '72px',
-          height: '72px',
-          margin: '0 auto var(--space-4)',
-          background: config.bg,
-          borderRadius: 'var(--radius-2xl)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '2.5rem',
-          boxShadow: 'var(--shadow-md)'
-        }} aria-hidden="true">
+      {/* Target Info — asymmetric layout, left-aligned */}
+      <div className="card card-padded target-header">
+        <div className="target-icon" aria-hidden="true" style={{ background: config.bg }}>
           {config.icon}
         </div>
-        <h2 className="target-name">{target?.name || id}</h2>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
-          <span className="type-badge">{config.label} #{id}</span>
-          {target?.status && (
-            <span className={`badge ${target.status === 'active' ? 'badge-success' : 'badge-neutral'}`}>
-              {target.status === 'active' ? '● พร้อมใช้งาน' : target.status}
-            </span>
+        <div className="target-info">
+          <h2 className="target-name">{target?.name || id}</h2>
+          <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', marginTop: 'var(--space-2)' }}>
+            <span className="type-badge">{config.label} #{id}</span>
+            {target?.status && (
+              <span className={`badge ${target.status === 'active' ? 'badge-success' : 'badge-neutral'}`}>
+                {target.status === 'active' ? '● พร้อมใช้งาน' : target.status}
+              </span>
+            )}
+          </div>
+          {target?.location && (
+            <p className="target-location">📍 {target.location}</p>
           )}
         </div>
-        {target?.location && (
-          <p style={{ marginTop: 'var(--space-3)', color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)' }}>
-            📍 {target.location}
-          </p>
-        )}
       </div>
 
       {/* Quick Actions */}
-      <div className="card card-padded">
-        <div className="section-header" style={{ marginBottom: 'var(--space-4)' }}>
-          <span className="section-title">ดำเนินการด่วน</span>
-        </div>
-        <div className="action-grid">
-          <ActionButton action="water"     onClick={onSelectAction} />
-          <ActionButton action="fertilize" onClick={onSelectAction} />
-          <ActionButton action="prune"     onClick={onSelectAction} />
-          <ActionButton action="spraying"  onClick={onSelectAction} />
-          <ActionButton action="inspect"   onClick={onSelectAction} />
-          <ActionButton action="harvest"   onClick={onSelectAction} />
-          <ActionButton action="report"    onClick={onSelectAction} />
-        </div>
+      <div className="section-header" style={{ marginBottom: 'var(--space-3)', marginTop: 'var(--space-6)' }}>
+        <span className="section-title">ดำเนินการด่วน</span>
+      </div>
+      <div className="action-grid">
+        <ActionButton action="water"     onClick={onSelectAction} />
+        <ActionButton action="fertilize" onClick={onSelectAction} />
+        <ActionButton action="prune"     onClick={onSelectAction} />
+        <ActionButton action="spraying"  onClick={onSelectAction} />
+        <ActionButton action="inspect"   onClick={onSelectAction} />
+        <ActionButton action="harvest"   onClick={onSelectAction} />
+        <ActionButton action="report"    onClick={onSelectAction} />
       </div>
 
       {/* Recent Activities */}

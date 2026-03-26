@@ -6,7 +6,6 @@ export default {
   ],
   theme: {
     extend: {
-      // Add brand colors alongside defaults
       colors: {
         primary: {
           50:  '#f0fdf4',
@@ -25,7 +24,6 @@ export default {
         danger:  '#ef4444',
         info:    '#3b82f6',
       },
-      // Typography scale
       fontSize: {
         '2xs':  ['0.625rem', { lineHeight: '0.875rem' }],
         'xs':   ['0.75rem',  { lineHeight: '1rem' }],
@@ -51,7 +49,7 @@ export default {
         lg:  '0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05)',
       },
       fontFamily: {
-        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        sans: ['Kanit', 'Noto Sans Thai', 'Sarabun', 'sans-serif'],
       },
     },
   },
