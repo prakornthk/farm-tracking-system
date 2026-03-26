@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Sprout, Map, Grid3x3, ClipboardList, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Sprout, Map, ClipboardList, CheckCircle2, AlertTriangle, ArrowRight } from 'lucide-react';
 import { useApi } from '../hooks/useApi';
 import { dashboardAPI } from '../services/api';
 import { LoadingSpinner, ErrorAlert } from '../components/Shared';
@@ -26,28 +26,32 @@ export default function Dashboard() {
       label: 'กิจกรรมวันนี้',
       value: stats.activities_today,
       icon: Sprout,
-      color: 'bg-green-50 text-green-600',
+      bg: 'bg-primary-50',
+      text: 'text-primary-600',
       link: '/farms',
     },
     {
       label: 'งานค้าง',
       value: stats.pending_tasks,
       icon: ClipboardList,
-      color: 'bg-blue-50 text-blue-600',
+      bg: 'bg-info-light',
+      text: 'text-info',
       link: '/tasks',
     },
     {
       label: 'งานเสร็จวันนี้',
       value: stats.completed_tasks_today,
       icon: CheckCircle2,
-      color: 'bg-emerald-50 text-emerald-600',
+      bg: 'bg-success-light',
+      text: 'text-success',
       link: '/tasks',
     },
     {
       label: 'ปัญหาเปิด',
       value: stats.open_problems,
       icon: AlertTriangle,
-      color: 'bg-orange-50 text-orange-600',
+      bg: 'bg-warning-light',
+      text: 'text-warning',
       link: '/problems',
     },
   ];
@@ -57,72 +61,63 @@ export default function Dashboard() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">แดชบอร์ด</h1>
+      <h1 className="page-title mb-6">แดชบอร์ด</h1>
 
-      {/* Stats cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      {/* Stats cards — consistent 2-col grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         {cards.map((card) => (
-          <Link key={card.label} to={card.link} className="card p-5 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <span className={`p-2 rounded-lg ${card.color}`}>
-                <card.icon size={20} />
-              </span>
+          <Link key={card.label} to={card.link} className="card-padded card-hover group">
+            <div className={`inline-flex p-2 rounded-lg mb-3 ${card.bg}`}>
+              <card.icon size={18} className={card.text} />
             </div>
-            <p className="text-2xl font-bold text-gray-900">{card.value}</p>
-            <p className="text-sm text-gray-500 mt-1">{card.label}</p>
+            <p className="text-2xl font-bold text-gray-900 leading-none">{stats.value !== undefined ? card.value : '—'}</p>
+            <p className="text-sm text-gray-500 mt-1.5">{card.label}</p>
           </Link>
         ))}
       </div>
 
-      {/* Plant Status Breakdown */}
-      <div className="card p-6 mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">สถานะต้นไม้</h2>
-        {stats.plant_status_breakdown?.length > 0 ? (
-          <div className="space-y-3">
-            {stats.plant_status_breakdown.map((item) => (
-              <div key={item.status} className="flex items-center gap-3">
-                <div className="flex-1">
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium text-gray-700 capitalize">{item.status}</span>
-                    <span className="text-gray-500">{item.count} ต้น</span>
-                  </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-green-500 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min((item.count / stats.total_plants) * 100, 100)}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
+      {/* Overdue Tasks Alert */}
+      {stats.overdue_tasks > 0 && (
+        <div className="mb-6 p-4 bg-danger-light border border-red-200 rounded-xl flex items-center gap-3">
+          <AlertTriangle className="text-danger flex-shrink-0" size={18} />
+          <div>
+            <p className="text-sm font-semibold text-danger-dark">งานที่เกินกำหนด</p>
+            <p className="text-xs text-danger-dark/70 mt-0.5">{stats.overdue_tasks} งานที่ต้องดำเนินการด่วน</p>
           </div>
-        ) : (
-          <p className="text-sm text-gray-400 text-center py-4">ยังไม่มีข้อมูล</p>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Quick links */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-        <Link to="/tasks" className="card p-4 hover:shadow-md transition-shadow flex items-center gap-3">
-          <ClipboardList className="text-orange-500" size={24} />
-          <div>
-            <p className="font-medium text-gray-900">งานทั้งหมด</p>
-            <p className="text-xs text-gray-500">ดูและจัดการงาน</p>
+      {/* Quick links — consistent with cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Link to="/tasks" className="card-padded card-hover flex items-center gap-3 group">
+          <span className="p-2 bg-orange-50 rounded-lg">
+            <ClipboardList className="text-orange-500" size={18} />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-900">งานทั้งหมด</p>
+            <p className="text-xs text-gray-400 mt-0.5">ดูและจัดการงาน</p>
           </div>
+          <ArrowRight size={14} className="text-gray-300 group-hover:text-gray-500 transition-colors flex-shrink-0" />
         </Link>
-        <Link to="/problems" className="card p-4 hover:shadow-md transition-shadow flex items-center gap-3">
-          <AlertTriangle className="text-red-500" size={24} />
-          <div>
-            <p className="font-medium text-gray-900">ปัญหา</p>
-            <p className="text-xs text-gray-500">รายงานปัญหาที่พบ</p>
+        <Link to="/problems" className="card-padded card-hover flex items-center gap-3 group">
+          <span className="p-2 bg-danger-light rounded-lg">
+            <AlertTriangle className="text-danger" size={18} />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-900">ปัญหา</p>
+            <p className="text-xs text-gray-400 mt-0.5">รายงานปัญหาที่พบ</p>
           </div>
+          <ArrowRight size={14} className="text-gray-300 group-hover:text-gray-500 transition-colors flex-shrink-0" />
         </Link>
-        <Link to="/farms" className="card p-4 hover:shadow-md transition-shadow flex items-center gap-3">
-          <Map className="text-green-500" size={24} />
-          <div>
-            <p className="font-medium text-gray-900">ฟาร์ม</p>
-            <p className="text-xs text-gray-500">จัดการฟาร์มและโซน</p>
+        <Link to="/farms" className="card-padded card-hover flex items-center gap-3 group">
+          <span className="p-2 bg-primary-50 rounded-lg">
+            <Map className="text-primary-600" size={18} />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-900">ฟาร์ม</p>
+            <p className="text-xs text-gray-400 mt-0.5">จัดการฟาร์มและโซน</p>
           </div>
+          <ArrowRight size={14} className="text-gray-300 group-hover:text-gray-500 transition-colors flex-shrink-0" />
         </Link>
       </div>
     </div>

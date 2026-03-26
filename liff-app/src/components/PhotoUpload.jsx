@@ -24,13 +24,15 @@ const PhotoUpload = ({ onPhotoSelected, photoPreview, onRemove }) => {
 
       onPhotoSelected(file)
     }
+    // Reset input so same file can be selected again
+    e.target.value = ''
   }
 
   if (photoPreview) {
     return (
       <div className="photo-preview">
         <img src={photoPreview} alt="Preview" />
-        <button className="remove-btn" onClick={onRemove}>
+        <button className="remove-btn" onClick={onRemove} type="button">
           ✕
         </button>
       </div>
@@ -38,7 +40,14 @@ const PhotoUpload = ({ onPhotoSelected, photoPreview, onRemove }) => {
   }
 
   return (
-    <div className="photo-upload" onClick={handleClick}>
+    <div 
+      className="photo-upload" 
+      onClick={handleClick}
+      onKeyDown={(e) => e.key === 'Enter' && handleClick()}
+      role="button"
+      tabIndex={0}
+      aria-label="อัพโหลดรูปภาพ"
+    >
       <input
         ref={fileInputRef}
         type="file"

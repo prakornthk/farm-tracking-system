@@ -120,10 +120,15 @@ class AuthController extends ApiController
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'sometimes|in:owner,manager,worker',
+            // NOTE: role cannot be set via this endpoint to prevent privilege escalation.
+            // Role assignment must be done through admin endpoints with proper authorization.
         ]);
 
-        $user = $this->userRepository->create($validated);
+        $data = $validated;
+        // Always set default role to 'worker' - role escalation prevented
+        $data['role'] = 'worker';
+
+        $user = $this->userRepository->create($data);
         $token = $user->createToken('register')->plainTextToken;
 
         return $this->success([

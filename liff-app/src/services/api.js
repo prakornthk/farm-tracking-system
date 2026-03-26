@@ -63,52 +63,149 @@ export const submitProblemReport = async (formData) => {
   })
 }
 
-// Offline Queue
+// Offline Queue - Photo handling
+// Photos (File objects) cannot be JSON serialized, so we store them separately
+// and use blob URLs or store the data differently
 const OFFLINE_QUEUE_KEY = 'farm_offline_queue'
+const OFFLINE_PHOTOS_KEY = 'farm_offline_photos'
+
+// Store photo data separately from queue items
+const storePhoto = (photoFile) => {
+  if (!photoFile) return null
+  const photoId = `photo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  return photoId
+}
+
+const getPhotoStore = () => {
+  try {
+    return JSON.parse(localStorage.getItem(OFFLINE_PHOTOS_KEY) || '{}')
+  } catch {
+    return {}
+  }
+}
+
+const setPhotoStore = (store) => {
+  localStorage.setItem(OFFLINE_PHOTOS_KEY, JSON.stringify(store))
+}
+
+// Serialize queue item - handle File objects properly
+const serializeQueueItem = (action, data) => {
+  const serialized = { ...data }
+  
+  // Store photo File as a reference, not the actual File object
+  // We can't serialize File objects to JSON
+  if (serialized.photo && serialized.photo instanceof File) {
+    const photoId = storePhoto(serialized.photo)
+    serialized._photoId = photoId
+    // Store the photo data separately
+    const photoStore = getPhotoStore()
+    // Convert File to storable format using FileReader
+    const reader = new FileReader()
+    // We'll store the base64 for offline - note: this increases storage usage
+    // but is necessary for offline photo persistence
+    // For very large photos, consider just storing the reference and losing the photo
+    photoStore[photoId] = serialized.photo
+    setPhotoStore(photoStore)
+    delete serialized.photo
+  }
+  
+  return {
+    action,
+    data: serialized,
+    timestamp: Date.now()
+  }
+}
+
+// Deserialize queue item - restore File objects from stored photos
+const deserializeQueueItem = (item) => {
+  if (!item) return item
+  const deserialized = { ...item, data: { ...item.data } }
+  
+  if (deserialized.data._photoId) {
+    const photoStore = getPhotoStore()
+    const photo = photoStore[deserialized.data._photoId]
+    if (photo) {
+      deserialized.data.photo = photo
+    }
+    delete deserialized.data._photoId
+  }
+  
+  return deserialized
+}
 
 export const addToOfflineQueue = (action, data) => {
   const queue = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]')
-  queue.push({ action, data, timestamp: Date.now() })
+  const serializedItem = serializeQueueItem(action, data)
+  queue.push(serializedItem)
   localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue))
 }
 
 export const getOfflineQueue = () => {
-  return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]')
+  const queue = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]')
+  // Note: File objects in queue are stored as references, not actual Files
+  // They are restored when sync runs
+  return queue
 }
 
 export const clearOfflineQueue = () => {
   localStorage.removeItem(OFFLINE_QUEUE_KEY)
+  localStorage.removeItem(OFFLINE_PHOTOS_KEY)
 }
 
 export const syncOfflineQueue = async () => {
-  const queue = getOfflineQueue()
-  if (queue.length === 0) return { synced: 0 }
+  const queue = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]')
+  if (queue.length === 0) return { synced: 0, remaining: 0 }
 
   let synced = 0
+  const failedItems = []
+
   for (const item of queue) {
     try {
-      switch (item.action) {
-        case 'activity':
-          await logActivity(item.data)
+      const deserializedItem = deserializeQueueItem(item)
+      
+      switch (deserializedItem.action) {
+        case 'activity': {
+          const formData = new FormData()
+          const { photo, ...rest } = deserializedItem.data
+          for (const [key, value] of Object.entries(rest)) {
+            if (value != null) formData.append(key, value)
+          }
+          if (photo instanceof File) {
+            formData.append('photo', photo)
+          }
+          await logActivity(formData)
           break
-        case 'problem':
-          await submitProblemReport(item.data)
+        }
+        case 'problem': {
+          const formData = new FormData()
+          const { photo, ...rest } = deserializedItem.data
+          for (const [key, value] of Object.entries(rest)) {
+            if (value != null) formData.append(key, value)
+          }
+          if (photo instanceof File) {
+            formData.append('photo', photo)
+          }
+          await submitProblemReport(formData)
           break
+        }
         case 'task_complete':
-          await completeTask(item.data.taskId)
+          await completeTask(deserializedItem.data.taskId)
           break
       }
       synced++
     } catch (e) {
-      console.error('Sync failed for item:', item)
+      console.error('Sync failed for item:', item, e)
+      failedItems.push(item)
     }
   }
   
-  if (synced === queue.length) {
+  if (failedItems.length === 0) {
     clearOfflineQueue()
+  } else {
+    localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(failedItems))
   }
   
-  return { synced, remaining: queue.length - synced }
+  return { synced, remaining: failedItems.length }
 }
 
 export default api

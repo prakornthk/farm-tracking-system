@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 
 const ACTION_ICONS = {
   water: '💧',
@@ -11,7 +11,7 @@ const ACTION_ICONS = {
   create: '➕'
 }
 
-const ActivityItem = ({ activity }) => {
+const ActivityItem = React.memo(({ activity }) => {
   const icon = ACTION_ICONS[activity.action_type] || '📝'
   
   const formatDate = (dateString) => {
@@ -29,13 +29,18 @@ const ActivityItem = ({ activity }) => {
     return date.toLocaleDateString('th-TH')
   }
 
+  const formattedDate = useMemo(() => 
+    formatDate(activity.created_at),
+    [activity.created_at]
+  )
+
   return (
     <div className="activity-item">
       <span className="activity-icon">{icon}</span>
       <div className="activity-details">
         <div className="action">{activity.action_display || activity.action_type}</div>
         <div className="meta">
-          {formatDate(activity.created_at)}
+          {formattedDate}
           {activity.user_name && ` • ${activity.user_name}`}
         </div>
         {activity.notes && (
@@ -46,6 +51,6 @@ const ActivityItem = ({ activity }) => {
       </div>
     </div>
   )
-}
+})
 
 export default ActivityItem

@@ -1,10 +1,21 @@
-import { useState, useEffect, useCallback } from 'react'
-import liffMock from '../services/liffMock'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
-// Use mock LIFF for development
-// In production with @line/liff-2 installed, replace with:
+// NOTE: In production, install @line/liff-2 and use the real SDK:
 // import liff from '@line/liff-2'
-const liff = liffMock
+// 
+// For development without LIFF SDK, this mock is used.
+// To test real LIFF: npm install @line/liff-2 then update imports
+import { createLiffMock } from '../services/liffMock'
+
+const getLiff = () => {
+  // Check if we have a real LIFF SDK
+  // eslint-disable-next-line no-undef
+  if (typeof liff !== 'undefined') {
+    return liff
+  }
+  // Fall back to mock for development
+  return createLiffMock()
+}
 
 const initialLiffState = {
   liff: null,
@@ -16,38 +27,46 @@ const initialLiffState = {
 
 export const useLiff = (liffId = import.meta.env.VITE_LIFF_ID) => {
   const [state, setState] = useState(initialLiffState)
+  const initRef = useRef(false)
+  const mountedRef = useRef(true)
 
   useEffect(() => {
-    let mounted = true
+    mountedRef.current = true
+    initRef.current = false
 
     const initLiff = async () => {
-      try {
-        // Initialize LIFF
-        await liff.init({ liffId })
-        
-        if (!mounted) return
+      if (initRef.current) return // Prevent double init
+      initRef.current = true
 
-        const isLoggedIn = liff.isLoggedIn()
+      try {
+        const liffInstance = getLiff()
+        await liffInstance.init({ liffId })
+        
+        if (!mountedRef.current) return // Unmounted during init
+
+        const isLoggedIn = liffInstance.isLoggedIn()
         
         let profile = null
         if (isLoggedIn) {
           try {
-            profile = await liff.getProfile()
+            profile = await liffInstance.getProfile()
           } catch (e) {
             console.warn('Could not get profile:', e)
           }
         }
 
-        setState({
-          liff,
-          isLoggedIn,
-          isReady: true,
-          profile,
-          error: null
-        })
+        if (mountedRef.current) {
+          setState({
+            liff: liffInstance,
+            isLoggedIn,
+            isReady: true,
+            profile,
+            error: null
+          })
+        }
       } catch (error) {
         console.error('LIFF init error:', error)
-        if (mounted) {
+        if (mountedRef.current) {
           setState(prev => ({
             ...prev,
             isReady: true,
@@ -60,7 +79,7 @@ export const useLiff = (liffId = import.meta.env.VITE_LIFF_ID) => {
     initLiff()
 
     return () => {
-      mounted = false
+      mountedRef.current = false
     }
   }, [liffId])
 

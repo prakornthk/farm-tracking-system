@@ -18,31 +18,14 @@ const TaskList = ({ userId, onBack, isOnline }) => {
     
     try {
       const res = await getTasks(userId)
-      setTasks(res.data || [])
+      // Backend returns paginated response
+      const tasksData = res.data?.data || res.data?. || []
+      setTasks(Array.isArray(tasksData) ? tasksData : [])
     } catch (err) {
       console.error('Fetch tasks error:', err)
       if (err.offline) {
-        // Mock data for offline
-        setTasks([
-          {
-            id: 'task-1',
-            title: 'รดน้ำต้นมะม่วง',
-            target_type: 'plant',
-            target_id: 'M-001',
-            location: 'แปลง A',
-            status: 'pending',
-            due_date: new Date().toISOString()
-          },
-          {
-            id: 'task-2',
-            title: 'ตรวจสอบแปลงทดลอง',
-            target_type: 'plot',
-            target_id: 'P-101',
-            location: 'แปลง B',
-            status: 'in-progress',
-            due_date: new Date().toISOString()
-          }
-        ])
+        // Mock data for offline - align field names with real backend
+        setTasks([])
       } else {
         setError('ไม่สามารถโหลดงานได้')
       }
@@ -81,12 +64,18 @@ const TaskList = ({ userId, onBack, isOnline }) => {
     }
   }
 
-  const getTaskIcon = (type) => {
-    switch (type) {
-      case 'plant': return '🌿'
-      case 'plot': return '🗺️'
-      default: return '📋'
-    }
+  const getTaskIcon = (task) => {
+    if (task.plot_id) return '🗺️'
+    if (task.zone_id) return '🗺️'
+    return '📋'
+  }
+
+  const getTaskLocation = (task) => {
+    if (task.plot?.name) return task.plot.name
+    if (task.zone?.name) return task.zone.name
+    if (task.plot_id) return `Plot #${task.plot_id}`
+    if (task.zone_id) return `Zone #${task.zone_id}`
+    return ''
   }
 
   const getStatusLabel = (status) => {
@@ -152,11 +141,11 @@ const TaskList = ({ userId, onBack, isOnline }) => {
             <ul className="task-list">
               {pendingTasks.map(task => (
                 <li key={task.id} className="task-item">
-                  <span className="task-icon">{getTaskIcon(task.target_type)}</span>
+                  <span className="task-icon">{getTaskIcon(task)}</span>
                   <div className="task-content">
                     <div className="task-title">{task.title}</div>
                     <div className="task-meta">
-                      📍 {task.location || `${task.target_type} #${task.target_id}`}
+                      📍 {getTaskLocation(task) || 'ไม่ระบุ'}
                       {task.due_date && ` • กำหนด ${formatDate(task.due_date)}`}
                     </div>
                     <span className={`status-badge ${getStatusClass(task.status)}`}>
@@ -186,13 +175,13 @@ const TaskList = ({ userId, onBack, isOnline }) => {
               <ul className="task-list">
                 {completedTasks.map(task => (
                   <li key={task.id} className="task-item" style={{ opacity: 0.6 }}>
-                    <span className="task-icon">{getTaskIcon(task.target_type)}</span>
+                    <span className="task-icon">{getTaskIcon(task)}</span>
                     <div className="task-content">
                       <div className="task-title" style={{ textDecoration: 'line-through' }}>
                         {task.title}
                       </div>
                       <div className="task-meta">
-                        📍 {task.location || `${task.target_type} #${task.target_id}`}
+                        📍 {getTaskLocation(task) || 'ไม่ระบุ'}
                       </div>
                       <span className={`status-badge ${getStatusClass(task.status)}`}>
                         {getStatusLabel(task.status)}

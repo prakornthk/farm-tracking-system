@@ -99,14 +99,14 @@ class FarmRepository implements FarmRepositoryInterface
      */
     public function getMetrics(int $farmId, Request $request)
     {
-        $farm = Farm::with(['zones.plots.plants', 'zones.plots.activities'])->findOrFail($farmId);
+        $farm = Farm::findOrFail($farmId);
 
         $startDate = $request->input('start_date', now()->startOfMonth());
         $endDate = $request->input('end_date', now()->endOfMonth());
 
         $zonesCount = $farm->zones()->count();
-        $plotsCount = $farm->zones->flatMap->plots->count();
-        $plantsCount = $farm->zones->flatMap->flatMap->plots->flatMap->plants->count();
+        $plotsCount = \App\Models\Plot::whereHas('zone', fn($q) => $q->where('farm_id', $farmId))->count();
+        $plantsCount = \App\Models\Plant::whereHas('plot.zone', fn($q) => $q->where('farm_id', $farmId))->count();
 
         // Activities in date range
         $activitiesInRange = $farm->activities()

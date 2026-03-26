@@ -16,14 +16,17 @@ const ScanPage = ({ type, id, onSelectAction }) => {
       setError(null)
       
       try {
+        // Build scan result from route params
+        const scanResult = { type, plant_id: type === 'plant' ? id : null, plot_id: type === 'plot' ? id : null }
+        
         // Fetch target info and activities in parallel
         const [targetRes, activitiesRes] = await Promise.all([
-          getTargetInfo(type, id),
-          getActivities(type, id, 5)
+          getTargetInfo(scanResult),
+          getActivities(scanResult, 5)
         ])
         
         setTarget(targetRes.data)
-        setActivities(activitiesRes.data || [])
+        setActivities(activitiesRes.data?.data || [])
       } catch (err) {
         console.error('Fetch error:', err)
         if (err.offline) {

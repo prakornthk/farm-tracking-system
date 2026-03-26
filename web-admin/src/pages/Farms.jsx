@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Edit2, Trash2, Map } from 'lucide-react';
+import { Plus, Edit2, Trash2, Map, ChevronRight } from 'lucide-react';
 import { useApi } from '../hooks/useApi';
 import { farmsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -16,9 +16,7 @@ export default function Farms() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
 
-  useEffect(() => {
-    execute();
-  }, []);
+  useEffect(() => { execute(); }, []);
 
   const openCreate = () => {
     setEditFarm(null);
@@ -36,24 +34,16 @@ export default function Farms() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name.trim()) {
-      setFormError('กรุณากรอกชื่อฟาร์ม');
-      return;
-    }
+    if (!form.name.trim()) { setFormError('กรุณากรอกชื่อฟาร์ม'); return; }
     setSaving(true);
     try {
-      if (editFarm) {
-        await farmsAPI.update(editFarm.id, form);
-      } else {
-        await farmsAPI.create(form);
-      }
+      if (editFarm) await farmsAPI.update(editFarm.id, form);
+      else await farmsAPI.create(form);
       setShowForm(false);
       execute();
     } catch (err) {
       setFormError(err.response?.data?.message || 'เกิดข้อผิดพลาด');
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
   };
 
   const handleDelete = async () => {
@@ -65,9 +55,7 @@ export default function Farms() {
       execute();
     } catch (err) {
       alert(err.response?.data?.message || 'ลบไม่สำเร็จ');
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
   };
 
   if (loading) return <LoadingSpinner />;
@@ -75,11 +63,14 @@ export default function Farms() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">ฟาร์ม</h1>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">ฟาร์ม</h1>
+          <p className="section-subtitle">จัดการฟาร์มและพื้นที่เพาะปลูก</p>
+        </div>
         {isManager() && (
-          <button onClick={openCreate} className="btn btn-primary flex items-center gap-2">
-            <Plus size={18} />
+          <button onClick={openCreate} className="btn btn-primary">
+            <Plus size={16} />
             เพิ่มฟาร์ม
           </button>
         )}
@@ -95,81 +86,70 @@ export default function Farms() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {farms.map((farm) => (
-            <div key={farm.id} className="card p-5 hover:shadow-md transition-shadow">
+            <div key={farm.id} className="card-padded card-hover group">
               <div className="flex items-start justify-between mb-3">
-                <div className="text-2xl">🌾</div>
+                <div className="flex items-center gap-2">
+                  <span className="p-2 bg-primary-50 rounded-lg">
+                    <Map size={16} className="text-primary-600" />
+                  </span>
+                </div>
                 {isManager() && (
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => openEdit(farm)}
-                      className="p-1.5 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50"
-                    >
-                      <Edit2 size={16} />
+                  <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => openEdit(farm)} className="btn-icon">
+                      <Edit2 size={14} />
                     </button>
-                    <button
-                      onClick={() => setDeleteTarget(farm)}
-                      className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50"
-                    >
-                      <Trash2 size={16} />
+                    <button onClick={() => setDeleteTarget(farm)} className="btn-icon hover:text-danger">
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 )}
               </div>
-              <h3 className="font-semibold text-gray-900 mb-1">{farm.name}</h3>
-              {farm.location && <p className="text-sm text-gray-500 mb-2">📍 {farm.location}</p>}
-              {farm.description && <p className="text-sm text-gray-400 mb-3">{farm.description}</p>}
+              <h3 className="text-sm font-semibold text-gray-900 mb-1">{farm.name}</h3>
+              {farm.location && (
+                <p className="text-xs text-gray-400 mb-2 flex items-center gap-1">
+                  <Map size={10} />{farm.location}
+                </p>
+              )}
+              {farm.description && (
+                <p className="text-xs text-gray-400 mb-3 line-clamp-2">{farm.description}</p>
+              )}
               <Link
                 to={`/farms/${farm.id}/zones`}
-                className="inline-flex items-center gap-1 text-sm text-green-600 font-medium hover:underline"
+                className="inline-flex items-center gap-1 text-xs text-primary-600 font-medium hover:underline"
               >
-                ดูโซน <span>→</span>
+                ดูโซน <ChevronRight size={12} />
               </Link>
             </div>
           ))}
         </div>
       )}
 
-      {/* Create/Edit Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
-            <h2 className="text-lg font-semibold mb-4">{editFarm ? 'แก้ไขฟาร์ม' : 'เพิ่มฟาร์มใหม่'}</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-5">{editFarm ? 'แก้ไขฟาร์ม' : 'เพิ่มฟาร์มใหม่'}</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ชื่อฟาร์ม *</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={form.name}
+                <label className="label">ชื่อฟาร์ม *</label>
+                <input type="text" className="input" value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="เช่น ฟาร์มสตรอว์เบอร์รี"
-                />
+                  placeholder="เช่น ฟาร์มสตรอว์เบอร์รี" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ที่อยู่/พื้นที่</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={form.location}
+                <label className="label">ที่อยู่/พื้นที่</label>
+                <input type="text" className="input" value={form.location}
                   onChange={(e) => setForm({ ...form, location: e.target.value })}
-                  placeholder="เช่น จ.เชียงใหม่"
-                />
+                  placeholder="เช่น จ.เชียงใหม่" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">รายละเอียด</label>
-                <textarea
-                  className="input"
-                  rows={3}
-                  value={form.description}
+                <label className="label">รายละเอียด</label>
+                <textarea className="input" rows={3} value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  placeholder="รายละเอียดเพิ่มเติม..."
-                />
+                  placeholder="รายละเอียดเพิ่มเติม..." />
               </div>
-              {formError && <p className="text-sm text-red-600">{formError}</p>}
+              {formError && <p className="text-sm text-danger">{formError}</p>}
               <div className="flex gap-3 justify-end pt-2">
-                <button type="button" onClick={() => setShowForm(false)} className="btn btn-secondary">
-                  ยกเลิก
-                </button>
+                <button type="button" onClick={() => setShowForm(false)} className="btn btn-secondary">ยกเลิก</button>
                 <button type="submit" className="btn btn-primary" disabled={saving}>
                   {saving ? 'กำลังบันทึก...' : 'บันทึก'}
                 </button>

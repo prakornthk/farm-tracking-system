@@ -55,8 +55,8 @@ const ProblemReport = ({ type, id, onBack, onSuccess, isOnline }) => {
     setError(null)
 
     const reportData = {
-      target_type: type,
-      target_id: id,
+      plot_id: type === 'plot' ? id : null,
+      plant_id: type === 'plant' ? id : null,
       problem_type: problemType,
       severity,
       description: description.trim(),
@@ -71,8 +71,8 @@ const ProblemReport = ({ type, id, onBack, onSuccess, isOnline }) => {
       }
 
       const formData = new FormData()
-      formData.append('target_type', type)
-      formData.append('target_id', id)
+      formData.append('plot_id', type === 'plot' ? id : null)
+      formData.append('plant_id', type === 'plant' ? id : null)
       formData.append('problem_type', problemType)
       formData.append('severity', severity)
       formData.append('description', description.trim())

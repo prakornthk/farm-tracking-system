@@ -14,14 +14,15 @@ const ActionForm = ({ type, id, action, onBack, onSuccess, isOnline }) => {
 
   const handlePhotoSelected = (file) => {
     setPhoto(file)
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      setPhotoPreview(reader.result)
-    }
-    reader.readAsDataURL(file)
+    // Use createObjectURL for better memory management than FileReader
+    const objectUrl = URL.createObjectURL(file)
+    setPhotoPreview(objectUrl)
   }
 
   const handleRemovePhoto = () => {
+    if (photoPreview) {
+      URL.revokeObjectURL(photoPreview)
+    }
     setPhoto(null)
     setPhotoPreview(null)
   }
@@ -30,26 +31,27 @@ const ActionForm = ({ type, id, action, onBack, onSuccess, isOnline }) => {
     setLoading(true)
     setError(null)
 
+    // activityData now includes photo for all action types
     const activityData = {
-      target_type: type,
-      target_id: id,
-      action_type: action,
+      activitable_type: type === 'plant' ? 'App\\Models\\Plant' : 'App\\Models\\Plot',
+      activitable_id: id,
+      type: action,
       notes: notes.trim() || null,
       photo: photo
     }
 
     try {
       if (!isOnline) {
-        // Queue for offline sync
+        // Queue for offline sync - photo will be stored properly
         addToOfflineQueue('activity', activityData)
         onSuccess()
         return
       }
 
       const formData = new FormData()
-      formData.append('target_type', type)
-      formData.append('target_id', id)
-      formData.append('action_type', action)
+      formData.append('activitable_type', type === 'plant' ? 'App\\Models\\Plant' : 'App\\Models\\Plot')
+      formData.append('activitable_id', id)
+      formData.append('type', action)
       if (notes.trim()) {
         formData.append('notes', notes.trim())
       }
@@ -109,17 +111,20 @@ const ActionForm = ({ type, id, action, onBack, onSuccess, isOnline }) => {
           </small>
         </div>
 
-        {/* Photo only for report action */}
-        {action === 'report' && (
-          <div className="form-group">
-            <label>รูปภาพประกอบ (ไม่บังคับ)</label>
-            <PhotoUpload
-              onPhotoSelected={handlePhotoSelected}
-              photoPreview={photoPreview}
-              onRemove={handleRemovePhoto}
-            />
-          </div>
-        )}
+        {/* Photo Upload - available for all action types */}
+        <div className="form-group">
+          <label>รูปภาพประกอบ (ไม่บังคับ)</label>
+          <PhotoUpload
+            onPhotoSelected={handlePhotoSelected}
+            photoPreview={photoPreview}
+            onRemove={handleRemovePhoto}
+          />
+          {action === 'report' && (
+            <small style={{ color: '#999', fontSize: '12px', display: 'block', marginTop: '6px' }}>
+              แนะนำสำหรับการแจ้งปัญหา
+            </small>
+          )}
+        </div>
 
         <button
           className="btn btn-primary"

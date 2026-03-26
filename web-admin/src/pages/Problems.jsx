@@ -5,12 +5,6 @@ import { problemsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { LoadingSpinner, ErrorAlert, EmptyState, ConfirmModal } from '../components/Shared';
 
-const SEVERITY_COLORS = {
-  low: 'bg-blue-100 text-blue-700',
-  medium: 'bg-yellow-100 text-yellow-700',
-  high: 'bg-red-100 text-red-700',
-};
-
 export default function Problems() {
   const { isManager } = useAuth();
   const { data: problems, loading, error, execute } = useApi(() => problemsAPI.list());
@@ -21,9 +15,7 @@ export default function Problems() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
 
-  useEffect(() => {
-    execute();
-  }, []);
+  useEffect(() => { execute(); }, []);
 
   const openCreate = () => {
     setEditProblem(null);
@@ -34,36 +26,23 @@ export default function Problems() {
 
   const openEdit = (p) => {
     setEditProblem(p);
-    setForm({
-      title: p.title,
-      description: p.description || '',
-      severity: p.severity || 'medium',
-      plot_id: p.plot_id || '',
-    });
+    setForm({ title: p.title, description: p.description || '', severity: p.severity || 'medium', plot_id: p.plot_id || '' });
     setFormError('');
     setShowForm(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.title.trim()) {
-      setFormError('กรุณากรอกหัวข้อปัญหา');
-      return;
-    }
+    if (!form.title.trim()) { setFormError('กรุณากรอกหัวข้อปัญหา'); return; }
     setSaving(true);
     try {
-      if (editProblem) {
-        await problemsAPI.update(editProblem.id, form);
-      } else {
-        await problemsAPI.create(form);
-      }
+      if (editProblem) await problemsAPI.update(editProblem.id, form);
+      else await problemsAPI.create(form);
       setShowForm(false);
       execute();
     } catch (err) {
       setFormError(err.response?.data?.message || 'เกิดข้อผิดพลาด');
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
   };
 
   const handleDelete = async () => {
@@ -75,21 +54,29 @@ export default function Problems() {
       execute();
     } catch (err) {
       alert(err.response?.data?.message || 'ลบไม่สำเร็จ');
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
   };
+
+  const severityBadge = (s) => ({
+    low: 'badge badge-info',
+    medium: 'badge badge-warning',
+    high: 'badge badge-danger',
+  }[s] || 'badge badge-neutral');
+
+  const severityLabel = (s) => ({ low: 'ต่ำ', medium: 'ปานกลาง', high: 'ด่วน' }[s] || s);
 
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorAlert message={error} onRetry={execute} />;
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">รายงานปัญหา</h1>
-        <button onClick={openCreate} className="btn btn-primary flex items-center gap-2">
-          <Plus size={18} />
-          แจ้งปัญหา
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">รายงานปัญหา</h1>
+          <p className="section-subtitle">ติดตามปัญหาที่พบในฟาร์ม</p>
+        </div>
+        <button onClick={openCreate} className="btn btn-primary">
+          <Plus size={16} />แจ้งปัญหา
         </button>
       </div>
 
@@ -103,43 +90,26 @@ export default function Problems() {
       ) : (
         <div className="space-y-3">
           {problems.map((p) => (
-            <div key={p.id} className="card p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-3 flex-1">
-                  <AlertTriangle className="text-orange-500 mt-0.5 flex-shrink-0" size={18} />
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-medium text-gray-900">{p.title}</h3>
-                      <span className={`badge ${SEVERITY_COLORS[p.severity] || 'bg-gray-100 text-gray-600'}`}>
-                        {p.severity === 'low' ? 'ต่ำ' : p.severity === 'medium' ? 'ปานกลาง' : 'ด่วน'}
-                      </span>
-                    </div>
-                    {p.description && (
-                      <p className="text-sm text-gray-500 mt-1">{p.description}</p>
-                    )}
-                    {p.plot_name && (
-                      <p className="text-xs text-gray-400 mt-1">📍 {p.plot_name}</p>
-                    )}
-                    {p.reporter_name && (
-                      <p className="text-xs text-gray-400 mt-1">👤 {p.reporter_name}</p>
-                    )}
+            <div key={p.id} className="card-padded">
+              <div className="flex items-start gap-3">
+                <div className="p-1.5 bg-warning-light rounded-lg mt-0.5 flex-shrink-0">
+                  <AlertTriangle size={15} className="text-warning" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <h3 className="text-sm font-semibold text-gray-900">{p.title}</h3>
+                    <span className={severityBadge(p.severity)}>{severityLabel(p.severity)}</span>
+                  </div>
+                  {p.description && <p className="text-sm text-gray-500 mb-2">{p.description}</p>}
+                  <div className="flex items-center gap-4 text-xs text-gray-400">
+                    {p.plot_name && <span>{p.plot_name}</span>}
+                    {p.reporter_name && <span>ผู้รายงาน: {p.reporter_name}</span>}
                   </div>
                 </div>
-
                 {isManager() && (
-                  <div className="flex gap-1 ml-3">
-                    <button
-                      onClick={() => openEdit(p)}
-                      className="p-1.5 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                    <button
-                      onClick={() => setDeleteTarget(p)}
-                      className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                  <div className="flex gap-0.5 flex-shrink-0">
+                    <button onClick={() => openEdit(p)} className="btn-icon"><Edit2 size={14} /></button>
+                    <button onClick={() => setDeleteTarget(p)} className="btn-icon hover:text-danger"><Trash2 size={14} /></button>
                   </div>
                 )}
               </div>
@@ -149,59 +119,42 @@ export default function Problems() {
       )}
 
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
-            <h2 className="text-lg font-semibold mb-4">{editProblem ? 'แก้ไขปัญหา' : 'แจ้งปัญหาใหม่'}</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-5">{editProblem ? 'แก้ไขปัญหา' : 'แจ้งปัญหาใหม่'}</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">หัวข้อปัญหา *</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={form.title}
+                <label className="label">หัวข้อปัญหา *</label>
+                <input type="text" className="input" value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  placeholder="เช่น ใบเหลืองผิดปกติ"
-                />
+                  placeholder="เช่น ใบเหลืองผิดปกติ" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">รายละเอียด</label>
-                <textarea
-                  className="input"
-                  rows={3}
-                  value={form.description}
+                <label className="label">รายละเอียด</label>
+                <textarea className="input" rows={3} value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  placeholder="อธิบายปัญหาที่พบ..."
-                />
+                  placeholder="อธิบายปัญหาที่พบ..." />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">ระดับความรุนแรง</label>
-                  <select
-                    className="input"
-                    value={form.severity}
-                    onChange={(e) => setForm({ ...form, severity: e.target.value })}
-                  >
+                  <label className="label">ระดับความรุนแรง</label>
+                  <select className="input" value={form.severity}
+                    onChange={(e) => setForm({ ...form, severity: e.target.value })}>
                     <option value="low">ต่ำ</option>
                     <option value="medium">ปานกลาง</option>
                     <option value="high">ด่วน</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">แปลงที่เกี่ยวข้อง</label>
-                  <input
-                    type="text"
-                    className="input"
-                    value={form.plot_id}
+                  <label className="label">แปลงที่เกี่ยวข้อง</label>
+                  <input type="text" className="input" value={form.plot_id}
                     onChange={(e) => setForm({ ...form, plot_id: e.target.value })}
-                    placeholder="ID แปลง"
-                  />
+                    placeholder="ID แปลง" />
                 </div>
               </div>
-              {formError && <p className="text-sm text-red-600">{formError}</p>}
+              {formError && <p className="text-sm text-danger">{formError}</p>}
               <div className="flex gap-3 justify-end pt-2">
-                <button type="button" onClick={() => setShowForm(false)} className="btn btn-secondary">
-                  ยกเลิก
-                </button>
+                <button type="button" onClick={() => setShowForm(false)} className="btn btn-secondary">ยกเลิก</button>
                 <button type="submit" className="btn btn-primary" disabled={saving}>
                   {saving ? 'กำลังบันทึก...' : 'บันทึก'}
                 </button>

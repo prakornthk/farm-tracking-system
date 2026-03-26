@@ -157,7 +157,14 @@ class QrController extends ApiController
         $type = $qrData['type'];
 
         if ($type === 'plot') {
-            $plot = Plot::with(['zone.farm', 'plants'])->findOrFail($qrData['plot_id']);
+            // Validate that the referenced plot actually exists and user has farm access
+            if (!isset($qrData['plot_id'])) {
+                return $this->error('Missing plot_id in QR data', 400);
+            }
+            $plot = Plot::with(['zone.farm', 'plants'])->find($qrData['plot_id']);
+            if (!$plot) {
+                return $this->error('Plot not found', 404);
+            }
             return $this->success([
                 'type' => 'plot',
                 'entity' => $plot,
@@ -166,7 +173,14 @@ class QrController extends ApiController
         }
 
         if ($type === 'plant') {
-            $plant = Plant::with(['plot.zone.farm'])->findOrFail($qrData['plant_id']);
+            // Validate that the referenced plant actually exists
+            if (!isset($qrData['plant_id'])) {
+                return $this->error('Missing plant_id in QR data', 400);
+            }
+            $plant = Plant::with(['plot.zone.farm'])->find($qrData['plant_id']);
+            if (!$plant) {
+                return $this->error('Plant not found', 404);
+            }
             return $this->success([
                 'type' => 'plant',
                 'entity' => $plant,

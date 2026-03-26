@@ -20,20 +20,25 @@ class DashboardController extends ApiController
             'farm_id' => 'nullable|exists:farms,id',
         ]);
 
+        $user = $request->user();
         $farmId = $request->input('farm_id');
-        $startDate = $request->input('start_date', now()->startOfMonth());
-        $endDate = $request->input('end_date', now()->endOfMonth());
 
-        $queryBase = [
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-        ];
-
+        // If farm_id specified, verify user has access to this farm
         if ($farmId) {
+            $isMember = $user->farms()->where('farms.id', $farmId)->exists();
+            if (!$isMember && $user->role !== 'super_admin') {
+                return $this->error('You do not have access to this farm', 403);
+            }
             $farm = Farm::with(['zones.plots.plants'])->findOrFail($farmId);
-            $metrics = $this->getFarmMetrics($farm, $queryBase);
+            $metrics = $this->getFarmMetrics($farm, [
+                'start_date' => $request->input('start_date', now()->startOfMonth()),
+                'end_date' => $request->input('end_date', now()->endOfMonth()),
+            ]);
         } else {
-            $metrics = $this->getOverallMetrics($queryBase);
+            $metrics = $this->getOverallMetrics([
+                'start_date' => $request->input('start_date', now()->startOfMonth()),
+                'end_date' => $request->input('end_date', now()->endOfMonth()),
+            ], $user);
         }
 
         return $this->success($metrics, 'Dashboard metrics retrieved successfully');
@@ -47,8 +52,12 @@ class DashboardController extends ApiController
         $user = $request->user();
         $today = now()->toDateString();
 
-        // Get user's farms
-        $farmIds = $user->farms()->pluck('farms.id')->toArray();
+        // Get user's farms (or all for super_admin)
+        if ($user->role === 'super_admin') {
+            $farmIds = Farm::where('is_active', true)->pluck('id')->toArray();
+        } else {
+            $farmIds = $user->farms()->pluck('farms.id')->toArray();
+        }
 
         // Today's activities count
         $todayActivities = Activity::whereIn('farm_id', $farmIds)
@@ -95,8 +104,10 @@ class DashboardController extends ApiController
     private function getFarmMetrics(Farm $farm, array $dateRange): array
     {
         $zonesCount = $farm->zones()->count();
-        $plotsCount = $farm->zones->flatMap->plots->count();
-        $plantsCount = $farm->zones->flatMap->flatMap->plots->flatMap->plants->count();
+        
+        // Use count queries instead of loading all relations into memory
+        $plotsCount = \App\Models\Plot::whereHas('zone', fn($q) => $q->where('farm_id', $farm->id))->count();
+        $plantsCount = \App\Models\Plant::whereHas('plot.zone', fn($q) => $q->where('farm_id', $farm->id))->count();
 
         // Activities in date range
         $activitiesQuery = $farm->activities()
@@ -162,9 +173,18 @@ class DashboardController extends ApiController
     /**
      * Get overall metrics across all user's farms.
      */
-    private function getOverallMetrics(array $dateRange): array
+    private function getOverallMetrics(array $dateRange, $user = null): array
     {
-        $farms = Farm::where('is_active', true)->get();
+        // Get farms user has access to (or all farms for super_admin)
+        $farmQuery = Farm::where('is_active', true);
+        if ($user && $user->role !== 'super_admin') {
+            $farmQuery->whereHas('users', function ($q) use ($user) {
+                $q->where('users.id', $user->id);
+            });
+        }
+        $farms = $farmQuery->get();
+        
+        $farmIds = $farms->pluck('id')->toArray();
         $totalZones = 0;
         $totalPlots = 0;
         $totalPlants = 0;
@@ -175,20 +195,25 @@ class DashboardController extends ApiController
             $totalPlants += $farm->zones->flatMap->flatMap->plots->flatMap->plants->count();
         }
 
-        $activitiesCount = Activity::whereBetween('activity_date', [$dateRange['start_date'], $dateRange['end_date']])->count();
-        $harvestCount = Activity::where('type', 'harvesting')
-            ->whereBetween('activity_date', [$dateRange['start_date'], $dateRange['end_date']])->count();
-        $totalYield = Activity::where('type', 'harvesting')
-            ->whereBetween('activity_date', [$dateRange['start_date'], $dateRange['end_date']])->sum('yield_amount');
-        $totalYieldValue = Activity::where('type', 'harvesting')
-            ->whereBetween('activity_date', [$dateRange['start_date'], $dateRange['end_date']])->sum('yield_total_value');
+        $activitiesQuery = Activity::whereIn('farm_id', $farmIds)
+            ->whereBetween('activity_date', [$dateRange['start_date'], $dateRange['end_date']]);
+        $activitiesCount = $activitiesQuery->count();
 
-        $openProblems = ProblemReport::whereIn('status', ['reported', 'investigating'])->count();
-        $resolvedProblems = ProblemReport::where('status', 'resolved')
+        $harvestQuery = Activity::whereIn('farm_id', $farmIds)
+            ->where('type', 'harvesting')
+            ->whereBetween('activity_date', [$dateRange['start_date'], $dateRange['end_date']]);
+        $harvestCount = $harvestQuery->count();
+        $totalYield = $harvestQuery->sum('yield_amount');
+        $totalYieldValue = $harvestQuery->sum('yield_total_value');
+
+        $problemsQuery = ProblemReport::whereIn('farm_id', $farmIds);
+        $openProblems = $problemsQuery->whereIn('status', ['reported', 'investigating'])->count();
+        $resolvedProblems = $problemsQuery->where('status', 'resolved')
             ->whereBetween('resolved_at', [$dateRange['start_date'], $dateRange['end_date']])->count();
 
-        $pendingTasks = Task::where('status', 'pending')->count();
-        $completedTasks = Task::where('status', 'completed')
+        $tasksQuery = Task::whereIn('farm_id', $farmIds);
+        $pendingTasks = $tasksQuery->where('status', 'pending')->count();
+        $completedTasks = $tasksQuery->where('status', 'completed')
             ->whereBetween('completed_at', [$dateRange['start_date'], $dateRange['end_date']])->count();
 
         return [

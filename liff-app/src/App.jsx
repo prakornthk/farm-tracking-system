@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import useLiff from './hooks/useLiff'
 import useOffline from './hooks/useOffline'
 import Header from './components/Header'
@@ -15,10 +15,59 @@ const App = () => {
   const [selectedAction, setSelectedAction] = useState(null)
   const [showSuccess, setShowSuccess] = useState(false)
 
-  const { liff, isLoggedIn, isReady, profile, error: liffError, login, close } = useLiff()
+  const { liff, isLoggedIn, isReady, profile, error: liffError, login } = useLiff()
   const { isOnline, pendingCount } = useOffline()
 
-  // Parse URL for scan route
+  // Stable callback refs to avoid stale closures
+  const handleSelectAction = useCallback((action) => {
+    setSelectedAction(action)
+  }, [])
+
+  const handleBack = useCallback(() => {
+    setSelectedAction(null)
+  }, [])
+
+  const handleSuccess = useCallback(() => {
+    setShowSuccess(true)
+    setSelectedAction(null)
+  }, [])
+
+  const handleNextScan = useCallback(() => {
+    setShowSuccess(false)
+    setScanData(null)
+    if (liff) {
+      liff.scanCode().then(result => {
+        const value = result.value
+        const match = value.match(/(?:scan\/)?([^\/]+)\/([^\/]+)$/)
+        if (match) {
+          setScanData({ type: match[1], id: match[2] })
+        }
+      }).catch(() => {
+        // User cancelled or scan failed
+      })
+    }
+  }, [liff])
+
+  const handleClose = useCallback(() => {
+    if (liff) {
+      liff.closeWindow()
+    }
+  }, [liff])
+
+  const handleLogin = useCallback(() => {
+    login()
+  }, [login])
+
+  const handleViewChange = useCallback((view) => {
+    if (view === 'scan') {
+      setScanData(null)
+      setSelectedAction(null)
+      setShowSuccess(false)
+    }
+    setCurrentView(view)
+  }, [])
+
+  // Parse URL for scan route - stable useEffect with no stale closure issues
   useEffect(() => {
     const parseRoute = () => {
       const path = window.location.pathname
@@ -33,51 +82,9 @@ const App = () => {
 
     parseRoute()
     
-    // Listen for route changes (for SPA routing)
     window.addEventListener('popstate', parseRoute)
     return () => window.removeEventListener('popstate', parseRoute)
   }, [])
-
-  const handleSelectAction = (action) => {
-    setSelectedAction(action)
-  }
-
-  const handleBack = () => {
-    setSelectedAction(null)
-  }
-
-  const handleSuccess = () => {
-    setShowSuccess(true)
-    setSelectedAction(null)
-  }
-
-  const handleNextScan = () => {
-    setShowSuccess(false)
-    setScanData(null)
-    // Try to scan again
-    if (liff) {
-      liff.scanCode().then(result => {
-        const value = result.value
-        // Parse QR value (format: /scan/type/id or just type/id)
-        const match = value.match(/(?:scan\/)?([^\/]+)\/([^\/]+)$/)
-        if (match) {
-          setScanData({ type: match[1], id: match[2] })
-        }
-      }).catch(() => {
-        // User cancelled or scan failed
-      })
-    }
-  }
-
-  const handleClose = () => {
-    if (liff) {
-      liff.closeWindow()
-    }
-  }
-
-  const handleLogin = () => {
-    login()
-  }
 
   // Not ready yet
   if (!isReady) {
@@ -134,7 +141,7 @@ const App = () => {
       return (
         <TaskList
           userId={profile?.userId}
-          onBack={() => setCurrentView('scan')}
+          onBack={handleBack}
           isOnline={isOnline}
         />
       )
@@ -221,14 +228,7 @@ const App = () => {
       <Header 
         title="Farm Tracking"
         currentView={currentView}
-        onViewChange={(view) => {
-          if (view === 'scan') {
-            setScanData(null)
-            setSelectedAction(null)
-            setShowSuccess(false)
-          }
-          setCurrentView(view)
-        }}
+        onViewChange={handleViewChange}
       />
 
       {/* Content */}

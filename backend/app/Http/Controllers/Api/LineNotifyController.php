@@ -2,27 +2,35 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Requests\LineNotifySendRequest;
+use App\Models\LineNotifyToken;
+use App\Models\Task;
+use App\Models\ProblemReport;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 
 class LineNotifyController extends ApiController
 {
     /**
-     * Send LINE notification.
+     * Send LINE notification using stored token for a user/farm.
      */
-    public function send(Request $request): JsonResponse
+    public function send(LineNotifySendRequest $request): JsonResponse
     {
-        $request->validate([
-            'message' => 'required|string|max:1000',
-            'token' => 'required|string',
-        ]);
+        $user = $request->user();
+        $validated = $request->validated();
 
-        $message = $request->input('message');
-        $token = $request->input('token');
+        // Retrieve the stored LINE Notify token for this user/farm
+        $tokenRecord = LineNotifyToken::where('user_id', $user->id)->first();
+
+        if (!$tokenRecord) {
+            return $this->error('LINE Notify token not configured for this user. Please authorize first.', 400);
+        }
+
+        $message = $validated['message'];
+        $token = $tokenRecord->token;
 
         try {
-            $response = Http::withHeaders([
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
                 'Authorization' => "Bearer {$token}",
             ])->asForm()->post('https://notify-api.line.me/api/notify', [
                 'message' => $message,
@@ -44,17 +52,20 @@ class LineNotifyController extends ApiController
     /**
      * Send notification with image.
      */
-    public function sendWithImage(Request $request): JsonResponse
+    public function sendWithImage(LineNotifySendRequest $request): JsonResponse
     {
-        $request->validate([
-            'message' => 'required|string|max:1000',
-            'image_url' => 'nullable|url',
-            'token' => 'required|string',
-        ]);
+        $user = $request->user();
+        $validated = $request->validated();
 
-        $message = $request->input('message');
-        $imageUrl = $request->input('image_url');
-        $token = $request->input('token');
+        $tokenRecord = LineNotifyToken::where('user_id', $user->id)->first();
+
+        if (!$tokenRecord) {
+            return $this->error('LINE Notify token not configured for this user. Please authorize first.', 400);
+        }
+
+        $message = $validated['message'];
+        $imageUrl = $validated['image_url'] ?? null;
+        $token = $tokenRecord->token;
 
         try {
             $formData = [
@@ -66,7 +77,7 @@ class LineNotifyController extends ApiController
                 $formData['imageFullsize'] = $imageUrl;
             }
 
-            $response = Http::withHeaders([
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
                 'Authorization' => "Bearer {$token}",
             ])->asForm()->post('https://notify-api.line.me/api/notify', $formData);
 
@@ -91,19 +102,21 @@ class LineNotifyController extends ApiController
         $request->validate([
             'task_id' => 'required|exists:tasks,id',
             'action' => 'required|in:created,assigned,completed,overdue',
-            'token' => 'required|string',
         ]);
 
-        $task = \App\Models\Task::with(['assignments.user', 'creator'])->findOrFail($request->input('task_id'));
+        $user = $request->user();
+        $tokenRecord = LineNotifyToken::where('user_id', $user->id)->first();
+
+        if (!$tokenRecord) {
+            return $this->error('LINE Notify token not configured. Please authorize first.', 400);
+        }
+
+        $task = Task::with(['assignments.user', 'creator'])->findOrFail($request->input('task_id'));
         $action = $request->input('action');
-        $token = $request->input('token');
 
         $message = $this->buildTaskMessage($task, $action);
 
-        return $this->send(new Request([
-            'message' => $message,
-            'token' => $token,
-        ]));
+        return $this->sendLineMessage($tokenRecord->token, $message);
     }
 
     /**
@@ -114,19 +127,108 @@ class LineNotifyController extends ApiController
         $request->validate([
             'problem_id' => 'required|exists:problem_reports,id',
             'action' => 'required|in:reported,resolved',
-            'token' => 'required|string',
         ]);
 
-        $problem = \App\Models\ProblemReport::with(['reporter', 'farm'])->findOrFail($request->input('problem_id'));
+        $user = $request->user();
+        $tokenRecord = LineNotifyToken::where('user_id', $user->id)->first();
+
+        if (!$tokenRecord) {
+            return $this->error('LINE Notify token not configured. Please authorize first.', 400);
+        }
+
+        $problem = ProblemReport::with(['reporter', 'farm'])->findOrFail($request->input('problem_id'));
         $action = $request->input('action');
-        $token = $request->input('token');
 
         $message = $this->buildProblemMessage($problem, $action);
 
-        return $this->send(new Request([
-            'message' => $message,
-            'token' => $token,
-        ]));
+        return $this->sendLineMessage($tokenRecord->token, $message);
+    }
+
+    /**
+     * Authorize LINE Notify token for a user (exchange code for token and store).
+     */
+    public function authorize(Request $request): JsonResponse
+    {
+        $request->validate([
+            'code' => 'required|string',
+        ]);
+
+        $code = $request->input('code');
+
+        // Exchange code for access token
+        $tokenResponse = \Illuminate\Support\Facades\Http::asForm()->post('https://notify-api.line.me/api/token', [
+            'grant_type' => 'authorization_code',
+            'code' => $code,
+            'client_id' => config('services.line_notify.client_id'),
+            'client_secret' => config('services.line_notify.client_secret'),
+        ]);
+
+        if (!$tokenResponse->successful()) {
+            return $this->error('Failed to authorize with LINE Notify', $tokenResponse->status());
+        }
+
+        $tokenData = $tokenResponse->json();
+
+        // Store or update the token for this user
+        LineNotifyToken::updateOrCreate(
+            ['user_id' => $request->user()->id],
+            [
+                'token' => $tokenData['access_token'],
+                'expires_in' => $tokenData['expires_in'] ?? null,
+            ]
+        );
+
+        return $this->success(['token' => $tokenData['access_token']], 'LINE Notify authorized successfully');
+    }
+
+    /**
+     * Revoke LINE Notify token for the authenticated user.
+     */
+    public function revoke(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $tokenRecord = LineNotifyToken::where('user_id', $user->id)->first();
+
+        if (!$tokenRecord) {
+            return $this->error('No LINE Notify token found', 400);
+        }
+
+        try {
+            \Illuminate\Support\Facades\Http::withHeaders([
+                'Authorization' => "Bearer {$tokenRecord->token}",
+            ])->asForm()->post('https://notify-api.line.me/api/revoke', []);
+        } catch (\Exception $e) {
+            // Ignore revocation errors (token might already be expired)
+        }
+
+        $tokenRecord->delete();
+
+        return $this->success(null, 'LINE Notify token revoked successfully');
+    }
+
+    /**
+     * Send LINE message helper.
+     */
+    private function sendLineMessage(string $token, string $message): JsonResponse
+    {
+        try {
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
+                'Authorization' => "Bearer {$token}",
+            ])->asForm()->post('https://notify-api.line.me/api/notify', [
+                'message' => $message,
+            ]);
+
+            if ($response->successful()) {
+                return $this->success([
+                    'status' => $response->json('status'),
+                    'message' => $message,
+                ], 'Notification sent successfully');
+            }
+
+            return $this->error('Failed to send notification: ' . $response->body(), $response->status());
+        } catch (\Exception $e) {
+            return $this->error('Failed to send notification: ' . $e->getMessage(), 500);
+        }
     }
 
     /**

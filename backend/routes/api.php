@@ -32,7 +32,7 @@ Route::prefix('auth')->group(function () {
 });
 
 // QR Code scanning (public for quick lookup)
-Route::post('/qr/scan', [QrController::class, 'scan']);
+Route::post('/qr/scan', [QrController::class, 'scan'])->middleware('auth:sanctum');
 
 // Protected routes (authentication required)
 Route::middleware('auth:sanctum')->group(function () {

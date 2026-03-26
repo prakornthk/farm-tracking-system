@@ -6,6 +6,16 @@ import { useApi } from '../hooks/useApi';
 import { plotsAPI } from '../services/api';
 import { LoadingSpinner, ErrorAlert } from '../components/Shared';
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 export default function PlotQR() {
   const { id: plotId } = useParams();
   const navigate = useNavigate();
@@ -19,12 +29,15 @@ export default function PlotQR() {
   }, [plotId]);
 
   const handlePrint = () => {
-    const printContent = printRef.current;
+    const plotName = escapeHtml(plot?.name || `แปลง #${plotId}`);
+    const plantType = escapeHtml(plot?.plant_type || '');
     const WinPrint = window.open('', '', 'width=400,height=500');
+    if (!WinPrint) return;
     WinPrint.document.write(`
+      <!DOCTYPE html>
       <html>
         <head>
-          <title>QR Code - ${plot?.name || plotId}</title>
+          <title>QR Code - ${plotName}</title>
           <style>
             body { font-family: sans-serif; text-align: center; padding: 20px; }
             h2 { margin-bottom: 5px; }
@@ -32,7 +45,12 @@ export default function PlotQR() {
           </style>
         </head>
         <body>
-          ${printRef.current.innerHTML}
+          <div id="plot-qr-svg" class="flex justify-center mb-4">
+            ${printRef.current.innerHTML}
+          </div>
+          <h2>${plotName}</h2>
+          ${plantType ? `<p>🌱 ${plantType}</p>` : ''}
+          <p style="font-size:12px;color:#999;margin-top:12px;">สแกนเพื่อดูข้อมูลแปลง</p>
         </body>
       </html>
     `);
@@ -44,6 +62,7 @@ export default function PlotQR() {
 
   const handleDownload = () => {
     const svg = document.getElementById('plot-qr-svg');
+    if (!svg) return;
     const svgData = new XMLSerializer().serializeToString(svg);
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -56,7 +75,8 @@ export default function PlotQR() {
       ctx.drawImage(img, 0, 0, 300, 300);
       const pngFile = canvas.toDataURL('image/png');
       const downloadLink = document.createElement('a');
-      downloadLink.download = `qr-plot-${plotId}.png`;
+      const safeName = (plot?.name || `plot-${plotId}`).replace(/[^a-z0-9_-]/gi, '_');
+      downloadLink.download = `qr-plot-${safeName}.png`;
       downloadLink.href = pngFile;
       downloadLink.click();
     };
@@ -69,18 +89,18 @@ export default function PlotQR() {
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-lg">
+        <button
+          onClick={() => navigate(-1)}
+          className="p-2 hover:bg-gray-100 rounded-lg"
+          aria-label="กลับ"
+        >
           <ArrowLeft size={20} />
         </button>
         <h1 className="text-2xl font-bold text-gray-900">QR Code แปลง #{plotId}</h1>
       </div>
 
       <div className="max-w-sm mx-auto">
-        <div
-          ref={printRef}
-          className="card p-8 text-center"
-          style={{ printRef }}
-        >
+        <div ref={printRef} className="card p-8 text-center">
           <div id="plot-qr-svg" className="flex justify-center mb-4">
             <QRCodeSVG value={qrUrl} size={200} level="H" />
           </div>
@@ -94,14 +114,14 @@ export default function PlotQR() {
             onClick={handleDownload}
             className="flex-1 btn btn-primary flex items-center justify-center gap-2"
           >
-            <Download size={18} />
+            <Download size={18} aria-hidden="true" />
             ดาวน์โหลด
           </button>
           <button
             onClick={handlePrint}
             className="flex-1 btn btn-secondary flex items-center justify-center gap-2"
           >
-            <Printer size={18} />
+            <Printer size={18} aria-hidden="true" />
             พิมพ์
           </button>
         </div>

@@ -1,13 +1,14 @@
 /**
- * LINE LIFF SDK Mock
+ * LINE LIFF SDK Mock Factory
  * 
  * ใน production ควรใช้ @line/liff-2 จริง
  * ติดตั้ง: npm install @line/liff-2
  * 
  * ไฟล์นี้เป็น mock สำหรับ development ที่ไม่มี LIFF SDK
+ * ใช้ createLiffMock() แทน direct import เพื่อให้ได้ instance ใหม่ทุกครั้ง
  */
 
-const liffMock = {
+export const createLiffMock = () => ({
   isLoggedIn: () => true,
   login: () => {},
   logout: () => {},
@@ -24,8 +25,10 @@ const liffMock = {
   getAccessToken: () => 'mock-access-token',
   getContext: () => null,
   isInClient: () => true,
- Os: () => 'android',
+  getOS: () => 'android',
   getVersion: () => '2.23.2'
-}
+})
 
+// Legacy default export for backward compatibility
+const liffMock = createLiffMock()
 export default liffMock
