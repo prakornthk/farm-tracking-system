@@ -3,10 +3,15 @@
 namespace Tests\Unit\Models;
 
 use App\Models\TaskAssignment;
-use PHPUnit\Framework\TestCase;
+use App\Models\Task;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class TaskAssignmentModelTest extends TestCase
 {
+    use RefreshDatabase;
+
     /** @test */
     public function task_assignment_model_exists(): void
     {
@@ -42,26 +47,55 @@ class TaskAssignmentModelTest extends TestCase
     /** @test */
     public function task_assignment_belongs_to_task_relationship(): void
     {
-        $assignment = new TaskAssignment();
-        $this->assertTrue(method_exists($assignment, 'task'));
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\BelongsTo::class, $assignment->task());
+        $task = Task::factory()->create();
+        $user = User::factory()->create();
+
+        $assignment = TaskAssignment::create([
+            'task_id' => $task->id,
+            'user_id' => $user->id,
+            'status' => 'assigned',
+            'assigned_at' => now(),
+        ]);
+
+        $this->assertEquals($task->id, $assignment->task->id);
+        $this->assertInstanceOf(Task::class, $assignment->task);
     }
 
     /** @test */
     public function task_assignment_belongs_to_user_relationship(): void
     {
-        $assignment = new TaskAssignment();
-        $this->assertTrue(method_exists($assignment, 'user'));
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\BelongsTo::class, $assignment->user());
+        $task = Task::factory()->create();
+        $user = User::factory()->create();
+
+        $assignment = TaskAssignment::create([
+            'task_id' => $task->id,
+            'user_id' => $user->id,
+            'status' => 'assigned',
+            'assigned_at' => now(),
+        ]);
+
+        $this->assertEquals($user->id, $assignment->user->id);
+        $this->assertInstanceOf(User::class, $assignment->user);
     }
 
     /** @test */
     public function task_assignment_is_pending_accessor(): void
     {
-        $assignment = new TaskAssignment(['status' => 'assigned']);
+        $task = Task::factory()->create();
+        $user = User::factory()->create();
+
+        $assignment = TaskAssignment::create([
+            'task_id' => $task->id,
+            'user_id' => $user->id,
+            'status' => 'assigned',
+            'assigned_at' => now(),
+        ]);
+
         $this->assertTrue($assignment->is_pending);
 
-        $assignment2 = new TaskAssignment(['status' => 'accepted']);
-        $this->assertFalse($assignment2->is_pending);
+        $assignment->status = 'accepted';
+        $assignment->save();
+
+        $this->assertFalse($assignment->is_pending);
     }
 }

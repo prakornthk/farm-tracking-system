@@ -22,7 +22,7 @@ abstract class TestCase extends BaseTestCase
 
     /**
      * Create a user with optional role and farms.
-     * 
+     *
      * Usage:
      *   $user = $this->actingAsUser(); // worker
      *   $user = $this->actingAsUser(['role' => 'owner']);
@@ -116,6 +116,58 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
+     * Create a zone under a farm.
+     */
+    protected function createZone(\App\Models\Farm $farm, array $attributes = []): \App\Models\Zone
+    {
+        return \App\Models\Zone::factory()->create(array_merge([
+            'farm_id' => $farm->id,
+        ], $attributes));
+    }
+
+    /**
+     * Create a plot under a zone.
+     */
+    protected function createPlot(\App\Models\Zone $zone, array $attributes = []): \App\Models\Plot
+    {
+        return \App\Models\Plot::factory()->create(array_merge([
+            'zone_id' => $zone->id,
+        ], $attributes));
+    }
+
+    /**
+     * Create a plant under a plot.
+     */
+    protected function createPlant(\App\Models\Plot $plot, array $attributes = []): \App\Models\Plant
+    {
+        return \App\Models\Plant::factory()->create(array_merge([
+            'plot_id' => $plot->id,
+        ], $attributes));
+    }
+
+    /**
+     * Create an activity.
+     */
+    protected function createActivity(\App\Models\Farm $farm, \App\Models\User $user, array $attributes = []): \App\Models\Activity
+    {
+        return \App\Models\Activity::factory()->create(array_merge([
+            'farm_id' => $farm->id,
+            'user_id' => $user->id,
+        ], $attributes));
+    }
+
+    /**
+     * Create a task.
+     */
+    protected function createTask(\App\Models\Farm $farm, \App\Models\User $creator, array $attributes = []): \App\Models\Task
+    {
+        return \App\Models\Task::factory()->create(array_merge([
+            'farm_id' => $farm->id,
+            'created_by' => $creator->id,
+        ], $attributes));
+    }
+
+    /**
      * Get authenticated headers for a user.
      */
     protected function authHeaders(\App\Models\User $user): array
@@ -130,29 +182,27 @@ abstract class TestCase extends BaseTestCase
     /**
      * Assert API response has success structure.
      */
-    protected function assertApiSuccess(array $response, string $message = null): void
+    protected function assertApiSuccess(array $response, ?string $message = null): void
     {
-        $responseData = $response;
+        $this->assertArrayHasKey('success', $response);
+        $this->assertTrue($response['success']);
+        $this->assertArrayHasKey('data', $response);
 
-        $this->assertArrayHasKey('success', $responseData);
-        $this->assertTrue($responseData['success']);
-        $this->assertArrayHasKey('data', $responseData);
-
-        if ($message) {
-            $this->assertEquals($message, $responseData['message']);
+        if ($message !== null) {
+            $this->assertEquals($message, $response['message']);
         }
     }
 
     /**
      * Assert API response has error structure.
      */
-    protected function assertApiError(array $response, int $expectedCode = null): void
+    protected function assertApiError(array $response, ?int $expectedCode = null): void
     {
         $this->assertArrayHasKey('success', $response);
         $this->assertFalse($response['success']);
         $this->assertArrayHasKey('message', $response);
 
-        if ($expectedCode) {
+        if ($expectedCode !== null) {
             // Note: actual code is in the HTTP response, not JSON body
         }
     }

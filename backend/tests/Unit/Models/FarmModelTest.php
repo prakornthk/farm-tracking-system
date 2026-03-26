@@ -5,10 +5,13 @@ namespace Tests\Unit\Models;
 use App\Models\Farm;
 use App\Models\User;
 use App\Models\Zone;
-use PHPUnit\Framework\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class FarmModelTest extends TestCase
 {
+    use RefreshDatabase;
+
     /** @test */
     public function farm_model_exists(): void
     {
@@ -48,40 +51,63 @@ class FarmModelTest extends TestCase
     /** @test */
     public function farm_has_many_zones_relationship(): void
     {
-        $farm = new Farm();
-        $this->assertTrue(method_exists($farm, 'zones'));
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class, $farm->zones());
+        $farm = Farm::factory()->create();
+        Zone::factory()->count(3)->create(['farm_id' => $farm->id]);
+
+        $this->assertCount(3, $farm->zones);
+        $this->assertInstanceOf(Zone::class, $farm->zones->first());
     }
 
     /** @test */
     public function farm_belongs_to_many_users_relationship(): void
     {
-        $farm = new Farm();
-        $this->assertTrue(method_exists($farm, 'users'));
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\BelongsToMany::class, $farm->users());
+        $farm = Farm::factory()->create();
+        $users = User::factory()->count(2)->create();
+
+        $farm->users()->attach($users->pluck('id'), ['role' => 'owner']);
+
+        $this->assertCount(2, $farm->users);
     }
 
     /** @test */
     public function farm_has_many_activities_relationship(): void
     {
-        $farm = new Farm();
-        $this->assertTrue(method_exists($farm, 'activities'));
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class, $farm->activities());
+        $farm = Farm::factory()->create();
+        $user = User::factory()->create();
+
+        \App\Models\Activity::factory()->count(2)->create([
+            'farm_id' => $farm->id,
+            'user_id' => $user->id,
+        ]);
+
+        $this->assertCount(2, $farm->activities);
     }
 
     /** @test */
     public function farm_has_many_tasks_relationship(): void
     {
-        $farm = new Farm();
-        $this->assertTrue(method_exists($farm, 'tasks'));
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class, $farm->tasks());
+        $farm = Farm::factory()->create();
+        $user = User::factory()->create();
+
+        \App\Models\Task::factory()->count(2)->create([
+            'farm_id' => $farm->id,
+            'created_by' => $user->id,
+        ]);
+
+        $this->assertCount(2, $farm->tasks);
     }
 
     /** @test */
     public function farm_has_many_problem_reports_relationship(): void
     {
-        $farm = new Farm();
-        $this->assertTrue(method_exists($farm, 'problemReports'));
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class, $farm->problemReports());
+        $farm = Farm::factory()->create();
+        $user = User::factory()->create();
+
+        \App\Models\ProblemReport::factory()->count(2)->create([
+            'farm_id' => $farm->id,
+            'reporter_id' => $user->id,
+        ]);
+
+        $this->assertCount(2, $farm->problemReports);
     }
 }

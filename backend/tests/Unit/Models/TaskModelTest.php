@@ -4,10 +4,15 @@ namespace Tests\Unit\Models;
 
 use App\Models\Task;
 use App\Models\Farm;
-use PHPUnit\Framework\TestCase;
+use App\Models\User;
+use App\Models\TaskAssignment;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class TaskModelTest extends TestCase
 {
+    use RefreshDatabase;
+
     /** @test */
     public function task_model_exists(): void
     {
@@ -54,25 +59,39 @@ class TaskModelTest extends TestCase
     /** @test */
     public function task_belongs_to_farm_relationship(): void
     {
-        $task = new Task();
-        $this->assertTrue(method_exists($task, 'farm'));
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\BelongsTo::class, $task->farm());
+        $task = Task::factory()->create();
+
+        $this->assertInstanceOf(Farm::class, $task->farm);
     }
 
     /** @test */
     public function task_belongs_to_creator_relationship(): void
     {
-        $task = new Task();
-        $this->assertTrue(method_exists($task, 'creator'));
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\BelongsTo::class, $task->creator());
+        $task = Task::factory()->create();
+
+        $this->assertInstanceOf(User::class, $task->creator);
     }
 
     /** @test */
     public function task_has_many_assignments_relationship(): void
     {
-        $task = new Task();
-        $this->assertTrue(method_exists($task, 'assignments'));
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class, $task->assignments());
+        $task = Task::factory()->create();
+        $users = User::factory()->count(2)->create();
+
+        TaskAssignment::create([
+            'task_id' => $task->id,
+            'user_id' => $users[0]->id,
+            'status' => 'assigned',
+            'assigned_at' => now(),
+        ]);
+        TaskAssignment::create([
+            'task_id' => $task->id,
+            'user_id' => $users[1]->id,
+            'status' => 'assigned',
+            'assigned_at' => now(),
+        ]);
+
+        $this->assertCount(2, $task->assignments);
     }
 
     /** @test */

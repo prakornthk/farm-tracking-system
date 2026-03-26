@@ -3,10 +3,14 @@
 namespace Tests\Unit\Models;
 
 use App\Models\Activity;
-use PHPUnit\Framework\TestCase;
+use App\Models\Plot;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class ActivityModelTest extends TestCase
 {
+    use RefreshDatabase;
+
     /** @test */
     public function activity_model_exists(): void
     {
@@ -58,41 +62,36 @@ class ActivityModelTest extends TestCase
     /** @test */
     public function activity_belongs_to_farm_relationship(): void
     {
-        $activity = new Activity();
-        $this->assertTrue(method_exists($activity, 'farm'));
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\BelongsTo::class, $activity->farm());
+        $activity = Activity::factory()->create();
+
+        $this->assertInstanceOf(\App\Models\Farm::class, $activity->farm);
     }
 
     /** @test */
     public function activity_belongs_to_user_relationship(): void
     {
-        $activity = new Activity();
-        $this->assertTrue(method_exists($activity, 'user'));
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\BelongsTo::class, $activity->user());
+        $activity = Activity::factory()->create();
+
+        $this->assertInstanceOf(\App\Models\User::class, $activity->user);
     }
 
     /** @test */
     public function activity_has_morphed_relationship(): void
     {
-        $activity = new Activity();
-        $this->assertTrue(method_exists($activity, 'activitable'));
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\MorphTo::class, $activity->activitable());
+        $activity = Activity::factory()->create([
+            'activitable_type' => Plot::class,
+        ]);
+
+        $this->assertInstanceOf(Plot::class, $activity->activitable);
     }
 
     /** @test */
     public function activity_has_valid_types(): void
     {
         $expectedTypes = [
-            'watering',
-            'fertilizing',
-            'pesticide',
-            'weeding',
-            'pruning',
-            'harvesting',
-            'inspection',
-            'planting',
-            'soil_preparation',
-            'other'
+            'watering', 'fertilizing', 'pesticide', 'weeding',
+            'pruning', 'harvesting', 'inspection', 'planting',
+            'soil_preparation', 'other'
         ];
 
         $this->assertEquals($expectedTypes, Activity::ACTIVITY_TYPES);

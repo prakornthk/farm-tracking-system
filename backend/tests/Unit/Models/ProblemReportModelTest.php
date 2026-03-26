@@ -3,10 +3,15 @@
 namespace Tests\Unit\Models;
 
 use App\Models\ProblemReport;
-use PHPUnit\Framework\TestCase;
+use App\Models\Farm;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class ProblemReportModelTest extends TestCase
 {
+    use RefreshDatabase;
+
     /** @test */
     public function problem_report_model_exists(): void
     {
@@ -54,17 +59,17 @@ class ProblemReportModelTest extends TestCase
     /** @test */
     public function problem_report_belongs_to_farm_relationship(): void
     {
-        $report = new ProblemReport();
-        $this->assertTrue(method_exists($report, 'farm'));
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\BelongsTo::class, $report->farm());
+        $report = ProblemReport::factory()->create();
+
+        $this->assertInstanceOf(Farm::class, $report->farm);
     }
 
     /** @test */
     public function problem_report_belongs_to_reporter_relationship(): void
     {
-        $report = new ProblemReport();
-        $this->assertTrue(method_exists($report, 'reporter'));
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\BelongsTo::class, $report->reporter());
+        $report = ProblemReport::factory()->create();
+
+        $this->assertInstanceOf(User::class, $report->reporter);
     }
 
     /** @test */

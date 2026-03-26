@@ -3,10 +3,14 @@
 namespace Tests\Unit\Models;
 
 use App\Models\LineNotifyToken;
-use PHPUnit\Framework\TestCase;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class LineNotifyTokenModelTest extends TestCase
 {
+    use RefreshDatabase;
+
     /** @test */
     public function line_notify_token_model_exists(): void
     {
@@ -45,8 +49,13 @@ class LineNotifyTokenModelTest extends TestCase
     /** @test */
     public function line_notify_token_belongs_to_user_relationship(): void
     {
-        $token = new LineNotifyToken();
-        $this->assertTrue(method_exists($token, 'user'));
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\BelongsTo::class, $token->user());
+        $user = User::factory()->create();
+        $token = LineNotifyToken::create([
+            'user_id' => $user->id,
+            'token' => 'test_token_123',
+        ]);
+
+        $this->assertEquals($user->id, $token->user->id);
+        $this->assertInstanceOf(User::class, $token->user);
     }
 }

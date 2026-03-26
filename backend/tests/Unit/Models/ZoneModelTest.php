@@ -5,10 +5,13 @@ namespace Tests\Unit\Models;
 use App\Models\Zone;
 use App\Models\Farm;
 use App\Models\Plot;
-use PHPUnit\Framework\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class ZoneModelTest extends TestCase
 {
+    use RefreshDatabase;
+
     /** @test */
     public function zone_model_exists(): void
     {
@@ -39,17 +42,22 @@ class ZoneModelTest extends TestCase
     /** @test */
     public function zone_belongs_to_farm_relationship(): void
     {
-        $zone = new Zone();
-        $this->assertTrue(method_exists($zone, 'farm'));
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\BelongsTo::class, $zone->farm());
+        $farm = Farm::factory()->create();
+        $zone = Zone::factory()->create(['farm_id' => $farm->id]);
+
+        $this->assertEquals($farm->id, $zone->farm->id);
+        $this->assertInstanceOf(Farm::class, $zone->farm);
     }
 
     /** @test */
     public function zone_has_many_plots_relationship(): void
     {
-        $zone = new Zone();
-        $this->assertTrue(method_exists($zone, 'plots'));
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class, $zone->plots());
+        $farm = Farm::factory()->create();
+        $zone = Zone::factory()->create(['farm_id' => $farm->id]);
+        Plot::factory()->count(3)->create(['zone_id' => $zone->id]);
+
+        $this->assertCount(3, $zone->plots);
+        $this->assertInstanceOf(Plot::class, $zone->plots->first());
     }
 
     /** @test */

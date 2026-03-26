@@ -3,10 +3,15 @@
 namespace Tests\Unit\Models;
 
 use App\Models\Plant;
-use PHPUnit\Framework\TestCase;
+use App\Models\Plot;
+use App\Models\Activity;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class PlantModelTest extends TestCase
 {
+    use RefreshDatabase;
+
     /** @test */
     public function plant_model_exists(): void
     {
@@ -52,17 +57,28 @@ class PlantModelTest extends TestCase
     /** @test */
     public function plant_belongs_to_plot_relationship(): void
     {
-        $plant = new Plant();
-        $this->assertTrue(method_exists($plant, 'plot'));
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\BelongsTo::class, $plant->plot());
+        $plot = Plot::factory()->create();
+        $plant = Plant::factory()->create(['plot_id' => $plot->id]);
+
+        $this->assertEquals($plot->id, $plant->plot->id);
+        $this->assertInstanceOf(Plot::class, $plant->plot);
     }
 
     /** @test */
     public function plant_has_many_activities_relationship(): void
     {
-        $plant = new Plant();
-        $this->assertTrue(method_exists($plant, 'activities'));
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\MorphMany::class, $plant->activities());
+        $plot = Plot::factory()->create();
+        $plant = Plant::factory()->create(['plot_id' => $plot->id]);
+        $user = \App\Models\User::factory()->create();
+
+        Activity::factory()->count(2)->create([
+            'farm_id' => $plot->zone->farm_id,
+            'user_id' => $user->id,
+            'activitable_type' => Plant::class,
+            'activitable_id' => $plant->id,
+        ]);
+
+        $this->assertCount(2, $plant->activities);
     }
 
     /** @test */
@@ -75,8 +91,11 @@ class PlantModelTest extends TestCase
     /** @test */
     public function plant_days_since_planted_calculation(): void
     {
-        $plant = new Plant();
-        $plant->planted_date = now()->subDays(10);
+        $plot = Plot::factory()->create();
+        $plant = Plant::factory()->create([
+            'plot_id' => $plot->id,
+            'planted_date' => now()->subDays(10),
+        ]);
 
         $this->assertEquals(10, $plant->days_since_planted);
     }
@@ -84,8 +103,11 @@ class PlantModelTest extends TestCase
     /** @test */
     public function plant_days_until_harvest_calculation(): void
     {
-        $plant = new Plant();
-        $plant->expected_harvest_date = now()->addDays(5);
+        $plot = Plot::factory()->create();
+        $plant = Plant::factory()->create([
+            'plot_id' => $plot->id,
+            'expected_harvest_date' => now()->addDays(5),
+        ]);
 
         $this->assertEquals(5, $plant->days_until_harvest);
     }
@@ -93,8 +115,11 @@ class PlantModelTest extends TestCase
     /** @test */
     public function plant_days_since_planted_returns_null_when_no_date(): void
     {
-        $plant = new Plant();
-        $plant->planted_date = null;
+        $plot = Plot::factory()->create();
+        $plant = Plant::factory()->create([
+            'plot_id' => $plot->id,
+            'planted_date' => null,
+        ]);
 
         $this->assertNull($plant->days_since_planted);
     }
@@ -102,8 +127,11 @@ class PlantModelTest extends TestCase
     /** @test */
     public function plant_days_until_harvest_returns_null_when_no_date(): void
     {
-        $plant = new Plant();
-        $plant->expected_harvest_date = null;
+        $plot = Plot::factory()->create();
+        $plant = Plant::factory()->create([
+            'plot_id' => $plot->id,
+            'expected_harvest_date' => null,
+        ]);
 
         $this->assertNull($plant->days_until_harvest);
     }
@@ -111,8 +139,11 @@ class PlantModelTest extends TestCase
     /** @test */
     public function plant_qr_data_returns_json(): void
     {
-        $plant = new Plant();
-        $plant->qr_code_data = json_encode(['type' => 'plant', 'plant_id' => 123]);
+        $plot = Plot::factory()->create();
+        $plant = Plant::factory()->create([
+            'plot_id' => $plot->id,
+            'qr_code_data' => json_encode(['type' => 'plant', 'plant_id' => 123]),
+        ]);
 
         $this->assertIsArray($plant->qr_data);
         $this->assertEquals('plant', $plant->qr_data['type']);

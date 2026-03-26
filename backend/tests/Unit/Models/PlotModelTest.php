@@ -3,10 +3,16 @@
 namespace Tests\Unit\Models;
 
 use App\Models\Plot;
-use PHPUnit\Framework\TestCase;
+use App\Models\Zone;
+use App\Models\Plant;
+use App\Models\Activity;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class PlotModelTest extends TestCase
 {
+    use RefreshDatabase;
+
     /** @test */
     public function plot_model_exists(): void
     {
@@ -51,33 +57,45 @@ class PlotModelTest extends TestCase
     /** @test */
     public function plot_belongs_to_zone_relationship(): void
     {
-        $plot = new Plot();
-        $this->assertTrue(method_exists($plot, 'zone'));
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\BelongsTo::class, $plot->zone());
+        $zone = Zone::factory()->create();
+        $plot = Plot::factory()->create(['zone_id' => $zone->id]);
+
+        $this->assertEquals($zone->id, $plot->zone->id);
+        $this->assertInstanceOf(Zone::class, $plot->zone);
     }
 
     /** @test */
     public function plot_has_many_plants_relationship(): void
     {
-        $plot = new Plot();
-        $this->assertTrue(method_exists($plot, 'plants'));
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class, $plot->plants());
+        $zone = Zone::factory()->create();
+        $plot = Plot::factory()->create(['zone_id' => $zone->id]);
+        Plant::factory()->count(3)->create(['plot_id' => $plot->id]);
+
+        $this->assertCount(3, $plot->plants);
+        $this->assertInstanceOf(Plant::class, $plot->plants->first());
     }
 
     /** @test */
     public function plot_has_many_activities_relationship(): void
     {
-        $plot = new Plot();
-        $this->assertTrue(method_exists($plot, 'activities'));
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\MorphMany::class, $plot->activities());
+        $zone = Zone::factory()->create();
+        $plot = Plot::factory()->create(['zone_id' => $zone->id]);
+        $user = \App\Models\User::factory()->create();
+
+        \App\Models\Activity::factory()->count(2)->create([
+            'farm_id' => $zone->farm_id,
+            'user_id' => $user->id,
+            'activitable_type' => Plot::class,
+            'activitable_id' => $plot->id,
+        ]);
+
+        $this->assertCount(2, $plot->activities);
     }
 
     /** @test */
     public function plot_has_valid_statuses(): void
     {
         $validStatuses = ['empty', 'planted', 'growing', 'harvesting', 'fallow'];
-        $plot = new Plot();
-
         $this->assertEquals($validStatuses, Plot::STATUSES);
     }
 }

@@ -3,10 +3,14 @@
 namespace Tests\Unit\Models;
 
 use App\Models\User;
-use PHPUnit\Framework\TestCase;
+use App\Models\Farm;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class UserModelTest extends TestCase
 {
+    use RefreshDatabase;
+
     /** @test */
     public function user_model_exists(): void
     {
@@ -56,9 +60,13 @@ class UserModelTest extends TestCase
     /** @test */
     public function user_belongs_to_many_farms_relationship(): void
     {
-        $user = new User();
-        $this->assertTrue(method_exists($user, 'farms'));
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\BelongsToMany::class, $user->farms());
+        $user = User::factory()->create();
+        $farms = Farm::factory()->count(2)->create();
+
+        $user->farms()->attach($farms->pluck('id'), ['role' => 'owner']);
+
+        $this->assertCount(2, $user->farms);
+        $this->assertInstanceOf(Farm::class, $user->farms->first());
     }
 
     /** @test */
@@ -71,7 +79,7 @@ class UserModelTest extends TestCase
     /** @test */
     public function user_is_super_admin(): void
     {
-        $user = new User(['role' => 'super_admin']);
+        $user = User::factory()->create(['role' => 'super_admin']);
         $this->assertTrue($user->isSuperAdmin());
         $this->assertFalse($user->isOwner());
         $this->assertFalse($user->isManager());
@@ -81,7 +89,7 @@ class UserModelTest extends TestCase
     /** @test */
     public function user_is_owner(): void
     {
-        $user = new User(['role' => 'owner']);
+        $user = User::factory()->create(['role' => 'owner']);
         $this->assertFalse($user->isSuperAdmin());
         $this->assertTrue($user->isOwner());
         $this->assertFalse($user->isManager());
@@ -91,7 +99,7 @@ class UserModelTest extends TestCase
     /** @test */
     public function user_is_manager(): void
     {
-        $user = new User(['role' => 'manager']);
+        $user = User::factory()->create(['role' => 'manager']);
         $this->assertFalse($user->isSuperAdmin());
         $this->assertFalse($user->isOwner());
         $this->assertTrue($user->isManager());
@@ -101,7 +109,7 @@ class UserModelTest extends TestCase
     /** @test */
     public function user_is_worker(): void
     {
-        $user = new User(['role' => 'worker']);
+        $user = User::factory()->create(['role' => 'worker']);
         $this->assertFalse($user->isSuperAdmin());
         $this->assertFalse($user->isOwner());
         $this->assertFalse($user->isManager());
