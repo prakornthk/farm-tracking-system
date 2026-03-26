@@ -49,7 +49,7 @@ return [
             'engine' => 'InnoDB',
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::ATTR_EMULATE_PREPARES => true,
-                PDO::MYSQL_ATTR_COM_MULTI => false,
+                defined('PDO::MYSQL_ATTR_MULTI_STATEMENTS') ? PDO::MYSQL_ATTR_MULTI_STATEMENTS : null => false,
             ]) : [],
         ],
     ],

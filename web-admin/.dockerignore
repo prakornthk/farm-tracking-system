@@ -4,7 +4,4 @@
 .env.*
 *.md
 node_modules/
-src/
-public/
 tests/
-*.config.*

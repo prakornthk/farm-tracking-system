@@ -6,23 +6,20 @@ RUN apk add --no-cache \
     git \
     curl \
     libpng-dev \
-    libonig-dev \
+    oniguruma-dev \
     libxml2-dev \
-    libmariadb-dev \
     libzip-dev \
     zip \
     unzip \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip \
-    && pecl install redis \
-    && docker-php-ext-enable redis
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
 
-# Copy composer files first (best caching)
-COPY composer.json composer.lock ./
+# Copy composer manifest first (best caching)
+COPY composer.json ./
 
 # Install dependencies (cached until composer files change)
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
@@ -31,9 +28,9 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --no-script
 COPY . /var/www
 
 # Final install & permissions
-RUN composer install --no-dev --optimize-autoloader --no-interaction \
+RUN mkdir -p /var/www/storage /var/www/bootstrap/cache \
+    && composer install --no-dev --optimize-autoloader --no-interaction \
     && chown -R 82:82 /var/www \
-    && mkdir -p /var/www/storage /var/www/bootstrap/cache \
     && chmod -R 755 /var/www/storage /var/www/bootstrap/cache
 
 # Expose port

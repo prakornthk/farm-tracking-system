@@ -12,6 +12,10 @@ RUN npm ci
 # Copy source
 COPY . .
 
+# Build-time environment for Vite
+ARG VITE_LINE_CLIENT_ID
+ENV VITE_LINE_CLIENT_ID=$VITE_LINE_CLIENT_ID
+
 # Build
 RUN npm run build
 
@@ -26,10 +30,6 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Copy nginx SPA config
 COPY nginx.spa.conf /etc/nginx/conf.d/default.conf
-
-# Run as non-root user
-# nginx alpine uses 'nginx' user (uid 82)
-USER nginx
 
 EXPOSE 80
 

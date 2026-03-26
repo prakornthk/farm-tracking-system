@@ -157,7 +157,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/send-with-image', [LineNotifyController::class, 'sendWithImage']);
         Route::post('/send-task', [LineNotifyController::class, 'sendTaskNotification']);
         Route::post('/send-problem', [LineNotifyController::class, 'sendProblemNotification']);
-        Route::post('/authorize', [LineNotifyController::class, 'authorize']);
+        Route::post('/authorize', [LineNotifyController::class, 'authorizeToken']);
         Route::post('/revoke', [LineNotifyController::class, 'revoke']);
     });
 });

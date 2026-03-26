@@ -147,7 +147,7 @@ class LineNotifyController extends ApiController
     /**
      * Authorize LINE Notify token for a user (exchange code for token and store).
      */
-    public function authorize(Request $request): JsonResponse
+    public function authorizeToken(Request $request): JsonResponse
     {
         $request->validate([
             'code' => 'required|string',

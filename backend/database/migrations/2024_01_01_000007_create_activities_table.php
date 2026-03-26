@@ -43,7 +43,6 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
             
-            $table->index(['activitable_type', 'activitable_id']);
             $table->index(['farm_id', 'type']);
             $table->index(['farm_id', 'activity_date']);
             $table->index('type');

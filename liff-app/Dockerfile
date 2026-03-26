@@ -7,10 +7,16 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
 # Copy source
 COPY . .
+
+# Build-time environment for Vite
+ARG VITE_LIFF_ID
+ARG VITE_API_BASE
+ENV VITE_LIFF_ID=$VITE_LIFF_ID
+ENV VITE_API_BASE=$VITE_API_BASE
 
 # Build
 RUN npm run build
@@ -26,9 +32,6 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Copy nginx SPA config
 COPY nginx.spa.conf /etc/nginx/conf.d/default.conf
-
-# Run as non-root user
-USER nginx
 
 EXPOSE 80
 
