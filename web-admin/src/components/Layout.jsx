@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard,
-  Farm,
+  LandPlot,
   Map,
   Grid3x3,
   Sprout,
@@ -18,7 +18,7 @@ import {
 
 const navItems = [
   { path: '/dashboard', label: 'แดชบอร์ด', icon: LayoutDashboard, roles: ['owner', 'manager', 'worker'] },
-  { path: '/farms', label: 'ฟาร์ม', icon: Farm, roles: ['owner', 'manager'] },
+  { path: '/farms', label: 'ฟาร์ม', icon: LandPlot, roles: ['owner', 'manager'] },
   { path: '/tasks', label: 'งาน', icon: ClipboardList, roles: ['owner', 'manager', 'worker'] },
   { path: '/problems', label: 'ปัญหา', icon: AlertTriangle, roles: ['owner', 'manager', 'worker'] },
   { path: '/users', label: 'ผู้ใช้', icon: Users, roles: ['owner'] },

@@ -221,8 +221,9 @@ export default function Plants() {
         title="ลบต้นไม้"
         message={`ต้องการลบ "${deleteTarget?.name}" หรือไม่?`}
         onConfirm={handleDelete}
-        onCancel={() => setDeleteTarget(null)}
+        onCancel={() => { setDeleteTarget(null); setDeleteError(''); }}
         loading={saving}
+        error={deleteError}
       />
     </div>
   );

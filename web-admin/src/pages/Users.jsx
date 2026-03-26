@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Edit2, Trash2, Users } from 'lucide-react';
+import { Plus, Edit2, Trash2, Users as UsersIcon } from 'lucide-react';
 import { useApi } from '../hooks/useApi';
 import { usersAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -26,6 +26,7 @@ export default function Users() {
   const [form, setForm] = useState({ name: '', email: '', role: 'worker', line_user_id: '' });
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => {
     execute();
@@ -74,13 +75,14 @@ export default function Users() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
+    setDeleteError('');
     setSaving(true);
     try {
       await usersAPI.delete(deleteTarget.id);
       setDeleteTarget(null);
       execute();
     } catch (err) {
-      alert(err.response?.data?.message || 'ลบไม่สำเร็จ');
+      setDeleteError(err.response?.data?.message || 'ลบไม่สำเร็จ');
     } finally {
       setSaving(false);
     }
@@ -109,7 +111,7 @@ export default function Users() {
 
       {!users || users.length === 0 ? (
         <EmptyState
-          icon={Users}
+          icon={UsersIcon}
           title="ยังไม่มีผู้ใช้"
           description="เพิ่มผู้ใช้งานใหม่"
           action={{ label: 'เพิ่มผู้ใช้', onClick: openCreate }}
@@ -233,8 +235,9 @@ export default function Users() {
         title="ลบผู้ใช้"
         message={`ต้องการลบผู้ใช้ "${deleteTarget?.name}" หรือไม่?`}
         onConfirm={handleDelete}
-        onCancel={() => setDeleteTarget(null)}
+        onCancel={() => { setDeleteTarget(null); setDeleteError(''); }}
         loading={saving}
+        error={deleteError}
       />
     </div>
   );

@@ -14,6 +14,7 @@ export default function Problems() {
   const [form, setForm] = useState({ title: '', description: '', severity: 'medium', plot_id: '' });
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => { execute(); }, []);
 
@@ -47,21 +48,22 @@ export default function Problems() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
+    setDeleteError('');
     setSaving(true);
     try {
       await problemsAPI.delete(deleteTarget.id);
       setDeleteTarget(null);
       execute();
     } catch (err) {
-      alert(err.response?.data?.message || 'ลบไม่สำเร็จ');
+      setDeleteError(err.response?.data?.message || 'ลบไม่สำเร็จ');
     } finally { setSaving(false); }
   };
 
   const severityBadge = (s) => ({
-    low: 'badge badge-info',
-    medium: 'badge badge-warning',
-    high: 'badge badge-danger',
-  }[s] || 'badge badge-neutral');
+    low: 'badge bg-blue-100 text-blue-700',
+    medium: 'badge bg-yellow-100 text-yellow-700',
+    high: 'badge bg-red-100 text-red-700',
+  }[s] || 'badge bg-gray-100 text-gray-600');
 
   const severityLabel = (s) => ({ low: 'ต่ำ', medium: 'ปานกลาง', high: 'ด่วน' }[s] || s);
 
@@ -92,8 +94,8 @@ export default function Problems() {
           {problems.map((p) => (
             <div key={p.id} className="card-padded">
               <div className="flex items-start gap-3">
-                <div className="p-1.5 bg-warning-light rounded-lg mt-0.5 flex-shrink-0">
-                  <AlertTriangle size={15} className="text-warning" />
+                <div className="p-1.5 bg-yellow-50 rounded-lg mt-0.5 flex-shrink-0">
+                  <AlertTriangle size={15} className="text-yellow-500" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -167,10 +169,11 @@ export default function Problems() {
       <ConfirmModal
         open={!!deleteTarget}
         title="ลบปัญหา"
-        message={`ต้องการลบปัญหา "${deleteTarget?.title}" หรือไม่?`}
+        message={`ต้องการลบปัญหา "${deleteTarget?.title}" �หรือไม่?`}
         onConfirm={handleDelete}
-        onCancel={() => setDeleteTarget(null)}
+        onCancel={() => { setDeleteTarget(null); setDeleteError(''); }}
         loading={saving}
+        error={deleteError}
       />
     </div>
   );

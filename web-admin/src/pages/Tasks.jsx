@@ -22,6 +22,7 @@ export default function Tasks() {
   const [form, setForm] = useState({ title: '', description: '', assigned_users: [], due_date: '', priority: 'medium' });
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
+  const [actionError, setActionError] = useState('');
 
   useEffect(() => {
     execute();
@@ -70,19 +71,20 @@ export default function Tasks() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
+    setActionError('');
     setSaving(true);
     try {
       await tasksAPI.delete(deleteTarget.id);
       setDeleteTarget(null);
       execute();
     } catch (err) {
-      alert(err.response?.data?.message || 'ลบไม่สำเร็จ');
+      setActionError(err.response?.data?.message || 'ลบไม่สำเร็จ');
     } finally { setSaving(false); }
   };
 
   const handleComplete = async (task) => {
     try { await tasksAPI.complete(task.id); execute(); }
-    catch (err) { alert('ไม่สามารถอัปเดตสถานะได้'); }
+    catch (err) { setActionError('ไม่สามารถอัปเดตสถานะได้'); }
   };
 
   const getStatusLabel = (s) => ({ pending: 'รอดำเนินการ', in_progress: 'กำลังทำ', completed: 'เสร็จแล้ว' }[s] || s);
@@ -118,6 +120,7 @@ export default function Tasks() {
         </select>
       </div>
 
+      {actionError && <ErrorAlert message={actionError} onRetry={() => setActionError('')} />}
       {loading ? <LoadingSpinner />
        : error ? <ErrorAlert message={error} onRetry={execute} />
        : !tasks || tasks.length === 0 ? (
@@ -212,7 +215,8 @@ export default function Tasks() {
 
       <ConfirmModal open={!!deleteTarget} title="ลบงาน"
         message={`ต้องการลบงาน "${deleteTarget?.title}" หรือไม่?`}
-        onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} loading={saving} />
+        onConfirm={handleDelete} onCancel={() => { setDeleteTarget(null); setActionError(''); }}
+        loading={saving} error={actionError} />
     </div>
   );
 }
