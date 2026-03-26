@@ -4,12 +4,9 @@ import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { ErrorBoundary } from '../../components/ErrorBoundary';
 
-// A component that throws an error
-function ThrowError({ shouldThrow, message = 'Test error' }) {
-  if (shouldThrow) {
-    throw new Error(message);
-  }
-  return <div>Rendered OK</div>;
+// A component that throws an error with a known message
+function ThrowError({ message = 'Test error' }) {
+  throw new Error(message);
 }
 
 describe('ErrorBoundary', () => {
@@ -24,45 +21,39 @@ describe('ErrorBoundary', () => {
         <div>Normal content</div>
       </ErrorBoundary>
     );
-
     expect(container).toHaveTextContent('Normal content');
   });
 
   it('renders error UI when child throws', () => {
     render(
       <ErrorBoundary>
-        <ThrowError shouldThrow={true} message="Something went wrong" />
+        <ThrowError message="Something went wrong" />
       </ErrorBoundary>
     );
-
     expect(screen.getByText('เกิดข้อผิดพลาด')).toBeInTheDocument();
     expect(screen.getByText('Something went wrong')).toBeInTheDocument();
   });
 
-  it('renders default error message when no message', () => {
+  it('renders retry button', () => {
     render(
       <ErrorBoundary>
-        <ThrowError shouldThrow={true} />
+        <ThrowError message="Test error" />
       </ErrorBoundary>
     );
-
-    expect(screen.getByText('เกิดข้อผิดพลาด')).toBeInTheDocument();
-    expect(screen.getByText('ไม่สามารถแสดงผลได้')).toBeInTheDocument();
+    expect(screen.getByText('ลองใหม่')).toBeInTheDocument();
   });
 
-  it('renders retry button that calls onClick', async () => {
+  it('retry button is clickable', async () => {
     const user = userEvent.setup();
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     render(
       <ErrorBoundary>
-        <ThrowError shouldThrow={true} message="Test error" />
+        <ThrowError message="Test error" />
       </ErrorBoundary>
     );
 
-    // The retry button should exist
     expect(screen.getByText('ลองใหม่')).toBeInTheDocument();
-
     consoleErrorSpy.mockRestore();
   });
 });

@@ -113,7 +113,7 @@ describe('AuthContext', () => {
     const mockUser = { id: 1, name: 'ผู้ใช้ทดสอบ', role: 'owner' };
     localStorage.setItem('token', 'abc123');
     localStorage.setItem('user', JSON.stringify(mockUser));
-    authAPI.logout).mockResolvedValue({});
+    authAPI.logout.mockResolvedValue({});
 
     render(
       <AuthProvider>
