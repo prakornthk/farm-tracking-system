@@ -48,8 +48,8 @@ describe('useLiff', () => {
     const mockLiff = makeMockLiff({
       init: vi.fn(() => new Promise(() => {})) // hangs
     })
-    const { liffMockModule } = await import('../services/liffMock')
-    liffMockModule.createLiffMock.mockReturnValue(mockLiff)
+    const { createLiffMock } = await import('../services/liffMock')
+    createLiffMock.mockReturnValue(mockLiff)
     currentMockLiff = mockLiff
 
     const { result } = renderHook(() => useLiff())
