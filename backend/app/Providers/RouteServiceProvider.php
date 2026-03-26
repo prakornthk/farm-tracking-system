@@ -26,6 +26,16 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
+        // Strict rate limit for auth endpoints to prevent brute-force attacks
+        RateLimiter::for('auth', function (Request $request) {
+            return Limit::perMinute(10)->by($request->ip());
+        });
+
+        // Rate limit for LINE Notify endpoints
+        RateLimiter::for('line-notify', function (Request $request) {
+            return Limit::perMinute(30)->by($request->user()?->id ?: $request->ip());
+        });
+
         $this->routes(function () {
             Route::middleware('api')
                 ->prefix('api')

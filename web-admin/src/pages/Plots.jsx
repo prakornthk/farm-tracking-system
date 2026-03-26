@@ -17,6 +17,7 @@ export default function Plots() {
   const [form, setForm] = useState({ name: '', size: '', plant_type: '' });
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => {
     execute();
@@ -60,13 +61,14 @@ export default function Plots() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
+    setDeleteError('');
     setSaving(true);
     try {
       await plotsAPI.delete(zoneId, deleteTarget.id);
       setDeleteTarget(null);
       execute();
     } catch (err) {
-      alert(err.response?.data?.message || 'ลบไม่สำเร็จ');
+      setDeleteError(err.response?.data?.message || 'ลบไม่สำเร็จ');
     } finally {
       setSaving(false);
     }
@@ -203,8 +205,9 @@ export default function Plots() {
         title="ลบแปลง"
         message={`ต้องการลบแปลง "${deleteTarget?.name}" หรือไม่?`}
         onConfirm={handleDelete}
-        onCancel={() => setDeleteTarget(null)}
+        onCancel={() => { setDeleteTarget(null); setDeleteError(''); }}
         loading={saving}
+        error={deleteError}
       />
     </div>
   );

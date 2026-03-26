@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import useLiff from './hooks/useLiff'
 import useOffline from './hooks/useOffline'
 import Header from './components/Header'
@@ -18,18 +18,14 @@ const App = () => {
   const { liff, isLoggedIn, isReady, profile, error: liffError, login } = useLiff()
   const { isOnline, pendingCount } = useOffline()
 
-  // Stable callback refs to avoid stale closures
-  const handleSelectAction = useCallback((action) => {
-    setSelectedAction(action)
-  }, [])
+  const handleSelectAction = useCallback((action) => setSelectedAction(action), [])
+  const handleBack         = useCallback(() => setSelectedAction(null), [])
+  const handleSuccess      = useCallback(() => { setShowSuccess(true); setSelectedAction(null) }, [])
+  const handleLogin        = useCallback(() => login(), [login])
 
-  const handleBack = useCallback(() => {
-    setSelectedAction(null)
-  }, [])
-
-  const handleSuccess = useCallback(() => {
-    setShowSuccess(true)
-    setSelectedAction(null)
+  const handleViewChange = useCallback((view) => {
+    if (view === 'scan') { setScanData(null); setSelectedAction(null); setShowSuccess(false) }
+    setCurrentView(view)
   }, [])
 
   const handleNextScan = useCallback(() => {
@@ -39,175 +35,90 @@ const App = () => {
       liff.scanCode().then(result => {
         const value = result.value
         const match = value.match(/(?:scan\/)?([^\/]+)\/([^\/]+)$/)
-        if (match) {
-          setScanData({ type: match[1], id: match[2] })
-        }
-      }).catch(() => {
-        // User cancelled or scan failed
-      })
+        if (match) setScanData({ type: match[1], id: match[2] })
+      }).catch(() => {})
     }
   }, [liff])
 
-  const handleClose = useCallback(() => {
-    if (liff) {
-      liff.closeWindow()
-    }
-  }, [liff])
+  const handleClose = useCallback(() => { if (liff) liff.closeWindow() }, [liff])
 
-  const handleLogin = useCallback(() => {
-    login()
-  }, [login])
-
-  const handleViewChange = useCallback((view) => {
-    if (view === 'scan') {
-      setScanData(null)
-      setSelectedAction(null)
-      setShowSuccess(false)
-    }
-    setCurrentView(view)
-  }, [])
-
-  // Parse URL for scan route - stable useEffect with no stale closure issues
   useEffect(() => {
     const parseRoute = () => {
       const path = window.location.pathname
       const scanMatch = path.match(/^\/scan\/([^\/]+)\/([^\/]+)$/)
-      
       if (scanMatch) {
-        const [, type, id] = scanMatch
-        setScanData({ type, id })
+        setScanData({ type: scanMatch[1], id: scanMatch[2] })
         setCurrentView('scan')
       }
     }
-
     parseRoute()
-    
     window.addEventListener('popstate', parseRoute)
     return () => window.removeEventListener('popstate', parseRoute)
   }, [])
 
-  // Not ready yet
   if (!isReady) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div className="spinner"></div>
-          <p style={{ marginTop: '12px', color: '#666' }}>กำลังเริ่มต้น...</p>
-        </div>
+        <div className="spinner" style={{ margin: '0 auto' }}></div>
       </div>
     )
   }
 
-  // Not logged in
-  if (!isLoggedIn) {
-    return <LoginPage onLogin={handleLogin} error={liffError} />
-  }
+  if (!isLoggedIn) return <LoginPage onLogin={handleLogin} error={liffError} />
 
-  // Render views
   const renderContent = () => {
-    // Success screen
-    if (showSuccess) {
-      return <SuccessPage onNextScan={handleNextScan} onClose={handleClose} />
-    }
+    if (showSuccess) return <SuccessPage onNextScan={handleNextScan} onClose={handleClose} />
 
-    // Action form
     if (selectedAction && scanData) {
       if (selectedAction === 'report') {
-        return (
-          <ProblemReport
-            type={scanData.type}
-            id={scanData.id}
-            onBack={handleBack}
-            onSuccess={handleSuccess}
-            isOnline={isOnline}
-          />
-        )
+        return <ProblemReport type={scanData.type} id={scanData.id} onBack={handleBack} onSuccess={handleSuccess} isOnline={isOnline} />
       }
-
-      return (
-        <ActionForm
-          type={scanData.type}
-          id={scanData.id}
-          action={selectedAction}
-          onBack={handleBack}
-          onSuccess={handleSuccess}
-          isOnline={isOnline}
-        />
-      )
+      return <ActionForm type={scanData.type} id={scanData.id} action={selectedAction} onBack={handleBack} onSuccess={handleSuccess} isOnline={isOnline} />
     }
 
-    // Task view
     if (currentView === 'tasks') {
-      return (
-        <TaskList
-          userId={profile?.userId}
-          onBack={handleBack}
-          isOnline={isOnline}
-        />
-      )
+      return <TaskList userId={profile?.userId} onBack={handleBack} isOnline={isOnline} />
     }
 
-    // Scan/Target view
     if (scanData) {
-      return (
-        <ScanPage
-          type={scanData.type}
-          id={scanData.id}
-          onSelectAction={handleSelectAction}
-        />
-      )
+      return <ScanPage type={scanData.type} id={scanData.id} onSelectAction={handleSelectAction} />
     }
 
-    // No scan data - show welcome or scan prompt
+    // Welcome / scan prompt
     return (
       <div className="container">
-        <div className="card" style={{ textAlign: 'center', marginTop: '40px' }}>
-          <div style={{ fontSize: '64px', marginBottom: '16px' }}>🌾</div>
-          <h2>Farm Tracking</h2>
-          <p style={{ color: '#666', margin: '16px 0' }}>
+        <div className="card" style={{ textAlign: 'center', padding: 'var(--space-8) var(--space-4)' }}>
+          <div style={{ fontSize: '3.5rem', marginBottom: 'var(--space-4)' }}>🌾</div>
+          <h2 className="card-title" style={{ marginBottom: 'var(--space-2)' }}>Farm Tracking</h2>
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-4)' }}>
             สวัสดี {profile?.displayName}!
           </p>
           
           {!isOnline && (
-            <div className="error" style={{ marginBottom: '16px', background: '#fff3e0' }}>
-              📴 อยู่ในโหมดออฟไลน์ - ข้อมูลจะถูกบันทึกเมื่อเชื่อมต่ออินเทอร์เน็ต
+            <div className="error" style={{ marginBottom: 'var(--space-4)', background: 'var(--color-warning-bg)', color: 'var(--color-warning-dark)' }}>
+              📴 อยู่ในโหมดออฟไลน์ — ข้อมูลจะถูกบันทึกเมื่อเชื่อมต่ออินเทอร์เน็ต
             </div>
           )}
           
           {pendingCount > 0 && (
-            <div style={{ 
-              background: '#e3f2fd', 
-              color: '#1976d2', 
-              padding: '10px', 
-              borderRadius: '8px',
-              marginBottom: '16px'
-            }}>
+            <div style={{ background: 'var(--color-info-bg)', color: 'var(--color-info-dark)', padding: 'var(--space-2) var(--space-3)', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-4)', fontSize: 'var(--text-sm)', fontWeight: '500' }}>
               📤 มี {pendingCount} รายการรอ sync
             </div>
           )}
 
-          <p style={{ color: '#999', fontSize: '14px' }}>
+          <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)' }}>
             สแกน QR Code บนต้นไม้หรือแปลงเพื่อเริ่มบันทึกกิจกรรม
           </p>
 
-          <button 
-            className="btn btn-primary" 
-            style={{ marginTop: '20px' }}
+          <button className="btn btn-primary" style={{ marginTop: 'var(--space-5)' }}
             onClick={async () => {
               try {
                 const result = await liff.scanCode()
-                const value = result.value
-                const match = value.match(/(?:scan\/)?([^\/]+)\/([^\/]+)$/)
-                if (match) {
-                  setScanData({ type: match[1], id: match[2] })
-                } else {
-                  alert('QR Code ไม่ถูกต้อง')
-                }
-              } catch (e) {
-                console.error('Scan cancelled')
-              }
-            }}
-          >
+                const match = result.value.match(/(?:scan\/)?([^\/]+)\/([^\/]+)$/)
+                if (match) setScanData({ type: match[1], id: match[2] })
+                else alert('QR Code ไม่ถูกต้อง')
+              } catch (e) { console.error('Scan cancelled') }
+            }}>
             📱 สแกน QR Code
           </button>
         </div>
@@ -217,24 +128,11 @@ const App = () => {
 
   return (
     <>
-      {/* Offline Banner */}
       {!isOnline && (
-        <div className="offline-banner">
-          📴 ไม่มีการเชื่อมต่ออินเทอร์เน็ต
-        </div>
+        <div className="offline-banner">📴 ไม่มีการเชื่อมต่ออินเทอร์เน็ต</div>
       )}
-
-      {/* Header */}
-      <Header 
-        title="Farm Tracking"
-        currentView={currentView}
-        onViewChange={handleViewChange}
-      />
-
-      {/* Content */}
-      <main style={{ paddingTop: scanData || selectedAction || showSuccess || currentView === 'tasks' ? 0 : 0 }}>
-        {renderContent()}
-      </main>
+      <Header title="Farm Tracking" currentView={currentView} onViewChange={handleViewChange} />
+      <main style={{ paddingTop: '0' }}>{renderContent()}</main>
     </>
   )
 }

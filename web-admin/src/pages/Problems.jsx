@@ -122,23 +122,23 @@ export default function Problems() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-5">{editProblem ? 'แก้ไขปัญหา' : 'แจ้งปัญหาใหม่'}</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" aria-label={editProblem ? 'แก้ไขปัญหา' : 'แจ้งปัญหาใหม่'}>
               <div>
-                <label className="label">หัวข้อปัญหา *</label>
-                <input type="text" className="input" value={form.title}
+                <label htmlFor="problem-title" className="label">หัวข้อปัญหา *</label>
+                <input id="problem-title" type="text" className="input" value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
                   placeholder="เช่น ใบเหลืองผิดปกติ" />
               </div>
               <div>
-                <label className="label">รายละเอียด</label>
-                <textarea className="input" rows={3} value={form.description}
+                <label htmlFor="problem-description" className="label">รายละเอียด</label>
+                <textarea id="problem-description" className="input" rows={3} value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   placeholder="อธิบายปัญหาที่พบ..." />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="label">ระดับความรุนแรง</label>
-                  <select className="input" value={form.severity}
+                  <label htmlFor="problem-severity" className="label">ระดับความรุนแรง</label>
+                  <select id="problem-severity" className="input" value={form.severity}
                     onChange={(e) => setForm({ ...form, severity: e.target.value })}>
                     <option value="low">ต่ำ</option>
                     <option value="medium">ปานกลาง</option>
@@ -146,13 +146,13 @@ export default function Problems() {
                   </select>
                 </div>
                 <div>
-                  <label className="label">แปลงที่เกี่ยวข้อง</label>
-                  <input type="text" className="input" value={form.plot_id}
+                  <label htmlFor="problem-plot-id" className="label">แปลงที่เกี่ยวข้อง</label>
+                  <input id="problem-plot-id" type="text" className="input" value={form.plot_id}
                     onChange={(e) => setForm({ ...form, plot_id: e.target.value })}
                     placeholder="ID แปลง" />
                 </div>
               </div>
-              {formError && <p className="text-sm text-danger">{formError}</p>}
+              {formError && <p className="text-sm text-danger" role="alert">{formError}</p>}
               <div className="flex gap-3 justify-end pt-2">
                 <button type="button" onClick={() => setShowForm(false)} className="btn btn-secondary">ยกเลิก</button>
                 <button type="submit" className="btn btn-primary" disabled={saving}>

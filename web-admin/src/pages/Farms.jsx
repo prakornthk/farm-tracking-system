@@ -15,6 +15,7 @@ export default function Farms() {
   const [form, setForm] = useState({ name: '', location: '', description: '' });
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => { execute(); }, []);
 
@@ -48,13 +49,14 @@ export default function Farms() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
+    setDeleteError('');
     setSaving(true);
     try {
       await farmsAPI.delete(deleteTarget.id);
       setDeleteTarget(null);
       execute();
     } catch (err) {
-      alert(err.response?.data?.message || 'ลบไม่สำเร็จ');
+      setDeleteError(err.response?.data?.message || 'ลบไม่สำเร็จ');
     } finally { setSaving(false); }
   };
 
@@ -164,8 +166,9 @@ export default function Farms() {
         title="ลบฟาร์ม"
         message={`ต้องการลบฟาร์ม "${deleteTarget?.name}" หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้`}
         onConfirm={handleDelete}
-        onCancel={() => setDeleteTarget(null)}
+        onCancel={() => { setDeleteTarget(null); setDeleteError(''); }}
         loading={saving}
+        error={deleteError}
       />
     </div>
   );

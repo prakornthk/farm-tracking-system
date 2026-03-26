@@ -4,9 +4,9 @@ const SuccessPage = ({ onNextScan, onClose }) => {
   return (
     <div className="container">
       <div className="success-screen">
-        <div className="icon">✅</div>
-        <h2>บันทึกสำเร็จ!</h2>
-        <p>ข้อมูลถูกบันทึกเรียบร้อยแล้ว</p>
+        <span className="success-icon">✅</span>
+        <h2 className="success-title">บันทึกสำเร็จ!</h2>
+        <p className="success-message">ข้อมูลถูกบันทึกเรียบร้อยแล้ว</p>
         
         <div className="btn-group">
           <button className="btn btn-primary" onClick={onNextScan}>

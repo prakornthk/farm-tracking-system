@@ -14,84 +14,50 @@ const ScanPage = ({ type, id, onSelectAction }) => {
     const fetchData = async () => {
       setLoading(true)
       setError(null)
-      
       try {
-        // Build scan result from route params
         const scanResult = { type, plant_id: type === 'plant' ? id : null, plot_id: type === 'plot' ? id : null }
-        
-        // Fetch target info and activities in parallel
         const [targetRes, activitiesRes] = await Promise.all([
           getTargetInfo(scanResult),
           getActivities(scanResult, 5)
         ])
-        
         setTarget(targetRes.data)
         setActivities(activitiesRes.data?.data || [])
       } catch (err) {
         console.error('Fetch error:', err)
         if (err.offline) {
-          // Use mock data for offline demo
-          setTarget({
-            name: id,
-            type: type,
-            location: 'แปลง A',
-            status: 'active'
-          })
+          setTarget({ name: id, type, location: 'แปลง A', status: 'active' })
           setActivities([])
         } else {
           setError('ไม่สามารถโหลดข้อมูลได้')
         }
-      } finally {
-        setLoading(false)
-      }
+      } finally { setLoading(false) }
     }
-
-    if (type && id) {
-      fetchData()
-    }
+    if (type && id) fetchData()
   }, [type, id])
 
-  if (loading) {
-    return <Loading message="กำลังโหลดข้อมูล..." />
-  }
+  if (loading) return <Loading message="กำลังโหลดข้อมูล..." />
 
   if (error) {
     return (
       <div className="container">
         <div className="error">{error}</div>
-        <button className="btn btn-secondary" onClick={() => window.location.reload()}>
-          ลองใหม่
-        </button>
+        <button className="btn btn-secondary" onClick={() => window.location.reload()}>ลองใหม่</button>
       </div>
     )
   }
 
-  const getTargetIcon = () => {
-    if (!target) return '🌱'
-    switch (type) {
-      case 'plant': return '🌿'
-      case 'plot': return '🗺️'
-      default: return '🌱'
-    }
-  }
-
-  const getTypeLabel = () => {
-    switch (type) {
-      case 'plant': return 'ต้นไม้'
-      case 'plot': return 'แปลง'
-      default: return type
-    }
-  }
+  const getTargetIcon = () => ({ plant: '🌿', plot: '🗺️' }[type] || '🌱')
+  const getTypeLabel = () => ({ plant: 'ต้นไม้', plot: 'แปลง' }[type] || type)
 
   return (
     <div className="container">
       {/* Target Info Card */}
       <div className="card target-info">
-        <div className="icon">{getTargetIcon()}</div>
-        <h2>{target?.name || id}</h2>
+        <span className="target-icon">{getTargetIcon()}</span>
+        <h2 className="target-name">{target?.name || id}</h2>
         <span className="type-badge">{getTypeLabel()}</span>
         {target?.location && (
-          <p style={{ marginTop: '8px', color: '#666', fontSize: '14px' }}>
+          <p style={{ marginTop: 'var(--space-2)', color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)' }}>
             📍 {target.location}
           </p>
         )}
@@ -99,26 +65,29 @@ const ScanPage = ({ type, id, onSelectAction }) => {
 
       {/* Quick Actions */}
       <div className="card">
-        <h3 style={{ fontSize: '14px', marginBottom: '12px', color: '#666' }}>
-          ดำเนินการด่วน
-        </h3>
+        <div className="section-header" style={{ marginBottom: 'var(--space-3)' }}>
+          <span className="section-title">ดำเนินการด่วน</span>
+        </div>
         <div className="action-grid">
-          <ActionButton action="water" onClick={onSelectAction} />
+          <ActionButton action="water"     onClick={onSelectAction} />
           <ActionButton action="fertilize" onClick={onSelectAction} />
-          <ActionButton action="prune" onClick={onSelectAction} />
-          <ActionButton action="inspect" onClick={onSelectAction} />
-          <ActionButton action="harvest" onClick={onSelectAction} />
-          <ActionButton action="report" onClick={onSelectAction} />
+          <ActionButton action="prune"     onClick={onSelectAction} />
+          <ActionButton action="inspect"   onClick={onSelectAction} />
+          <ActionButton action="harvest"   onClick={onSelectAction} />
+          <ActionButton action="report"    onClick={onSelectAction} />
         </div>
       </div>
 
       {/* Recent Activities */}
-      <div className="card activities">
-        <h3>กิจกรรมล่าสุด</h3>
+      <div className="card">
+        <div className="section-header" style={{ marginBottom: 'var(--space-2)' }}>
+          <span className="section-title">กิจกรรมล่าสุด</span>
+        </div>
         {activities.length === 0 ? (
-          <p style={{ color: '#999', textAlign: 'center', padding: '20px' }}>
-            ยังไม่มีกิจกรรม
-          </p>
+          <div className="empty-state" style={{ padding: 'var(--space-5) 0' }}>
+            <span className="empty-icon">📋</span>
+            <p className="empty-message">ยังไม่มีกิจกรรม</p>
+          </div>
         ) : (
           activities.map((activity, index) => (
             <ActivityItem key={activity.id || index} activity={activity} />

@@ -41,7 +41,7 @@ export function EmptyState({ icon: Icon, title, description, action }) {
   );
 }
 
-export function ConfirmModal({ open, title, message, onConfirm, onCancel, loading }) {
+export function ConfirmModal({ open, title, message, onConfirm, onCancel, loading, error }) {
   if (!open) return null;
   return (
     <div
@@ -52,7 +52,8 @@ export function ConfirmModal({ open, title, message, onConfirm, onCancel, loadin
     >
       <div className="bg-white rounded-xl shadow-xl max-w-sm w-full mx-4 p-6">
         <h3 id="confirm-modal-title" className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-        <p className="text-sm text-gray-600 mb-6">{message}</p>
+        <p className="text-sm text-gray-600 mb-4">{message}</p>
+        {error && <p className="text-sm text-danger mb-4" role="alert">{error}</p>}
         <div className="flex gap-3 justify-end">
           <button onClick={onCancel} className="btn btn-secondary" disabled={loading}>ยกเลิก</button>
           <button onClick={onConfirm} className="btn btn-danger" disabled={loading} aria-busy={loading}>

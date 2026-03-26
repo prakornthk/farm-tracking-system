@@ -3,18 +3,18 @@ import PhotoUpload from '../components/PhotoUpload'
 import { submitProblemReport, addToOfflineQueue } from '../services/api'
 
 const PROBLEM_TYPES = [
-  { value: 'pest', label: '🐛 แมลง/ศัตรูพืช' },
-  { value: 'disease', label: '🤒 โรคพืช' },
-  { value: 'water', label: '💧 ปัญหาน้ำ' },
-  { value: 'soil', label: '🪨 ปัญหาดิน' },
-  { value: 'weather', label: '🌡️ ปัญหาสภาพอากาศ' },
-  { value: 'other', label: '❓ อื่นๆ' }
+  { value: 'pest',     label: '🐛 แมลง/ศัตรูพืช' },
+  { value: 'disease',  label: '🤒 โรคพืช' },
+  { value: 'water',    label: '💧 ปัญหาน้ำ' },
+  { value: 'soil',     label: '🪨 ปัญหาดิน' },
+  { value: 'weather',  label: '🌡️ ปัญหาสภาพอากาศ' },
+  { value: 'other',    label: '❓ อื่นๆ' }
 ]
 
 const SEVERITY_LEVELS = [
-  { value: 'low', label: 'ต่ำ', color: '#4CAF50' },
-  { value: 'medium', label: 'ปานกลาง', color: '#FF9800' },
-  { value: 'high', label: 'สูง', color: '#f44336' }
+  { value: 'low',    label: 'ต่ำ',      color: '#52b788' },
+  { value: 'medium', label: 'ปานกลาง',  color: '#f59e0b' },
+  { value: 'high',   label: 'สูง',       color: '#ef4444' }
 ]
 
 const ProblemReport = ({ type, id, onBack, onSuccess, isOnline }) => {
@@ -28,29 +28,19 @@ const ProblemReport = ({ type, id, onBack, onSuccess, isOnline }) => {
 
   const handlePhotoSelected = (file) => {
     setPhoto(file)
-    // Use createObjectURL for better memory management
     const objectUrl = URL.createObjectURL(file)
     setPhotoPreview(objectUrl)
   }
 
   const handleRemovePhoto = () => {
-    if (photoPreview) {
-      URL.revokeObjectURL(photoPreview)
-    }
+    if (photoPreview) URL.revokeObjectURL(photoPreview)
     setPhoto(null)
     setPhotoPreview(null)
   }
 
   const handleSubmit = async () => {
-    if (!problemType) {
-      setError('กรุณาเลือกประเภทปัญหา')
-      return
-    }
-
-    if (!description.trim()) {
-      setError('กรุณาอธิบายปัญหา')
-      return
-    }
+    if (!problemType) { setError('กรุณาเลือกประเภทปัญหา'); return }
+    if (!description.trim()) { setError('กรุณาอธิบายปัญหา'); return }
 
     setLoading(true)
     setError(null)
@@ -70,90 +60,69 @@ const ProblemReport = ({ type, id, onBack, onSuccess, isOnline }) => {
         onSuccess()
         return
       }
-
       const formData = new FormData()
       formData.append('plot_id', type === 'plot' ? id : null)
       formData.append('plant_id', type === 'plant' ? id : null)
       formData.append('problem_type', problemType)
       formData.append('severity', severity)
       formData.append('description', description.trim())
-      if (photo) {
-        formData.append('photo', photo)
-      }
+      if (photo) formData.append('photo', photo)
 
       await submitProblemReport(formData)
       onSuccess()
     } catch (err) {
       console.error('Submit report error:', err)
-      if (err.offline) {
-        addToOfflineQueue('problem', reportData)
-        onSuccess()
-      } else {
-        setError('ไม่สามารถส่งรายงานได้ กรุณาลองใหม่')
-      }
-    } finally {
-      setLoading(false)
-    }
+      if (err.offline) { addToOfflineQueue('problem', reportData); onSuccess() }
+      else setError('ไม่สามารถส่งรายงานได้ กรุณาลองใหม่')
+    } finally { setLoading(false) }
   }
 
   return (
     <div className="container">
-      <button className="back-btn" onClick={onBack}>
-        ← กลับ
-      </button>
+      <button className="back-btn" onClick={onBack}>← กลับ</button>
 
       {/* Header */}
-      <div className="card" style={{ textAlign: 'center', marginBottom: '16px', background: '#fff5f5' }}>
-        <div style={{ fontSize: '48px', marginBottom: '8px' }}>⚠️</div>
-        <h2>แจ้งปัญหา</h2>
-        <p style={{ color: '#666', fontSize: '14px' }}>
-          {type === 'plant' ? 'ต้นไม้' : 'แปลง'} #{id}
-        </p>
+      <div className="card" style={{ textAlign: 'center', marginBottom: 'var(--space-4)', background: 'var(--color-danger-bg)' }}>
+        <div style={{ fontSize: '2.5rem', marginBottom: 'var(--space-2)' }}>⚠️</div>
+        <h2 className="card-title" style={{ marginBottom: 'var(--space-1)' }}>แจ้งปัญหา</h2>
+        <span className="type-badge">{type === 'plant' ? '🌱 ต้นไม้' : '🗺️ แปลง'} #{id}</span>
       </div>
 
       {/* Form */}
-      <div className="card form-section">
-        {error && (
-          <div className="error" style={{ marginBottom: '16px' }}>
-            {error}
-          </div>
-        )}
+      <div className="card">
+        {error && <div className="error" style={{ marginBottom: 'var(--space-4)' }}>{error}</div>}
 
         <div className="form-group">
-          <label>ประเภทปัญหา *</label>
-          <select
-            value={problemType}
-            onChange={(e) => setProblemType(e.target.value)}
-          >
+          <label className="form-label">ประเภทปัญหา *</label>
+          <select className="form-select" value={problemType}
+            onChange={(e) => setProblemType(e.target.value)}>
             <option value="">-- เลือกประเภทปัญหา --</option>
             {PROBLEM_TYPES.map(pt => (
-              <option key={pt.value} value={pt.value}>
-                {pt.label}
-              </option>
+              <option key={pt.value} value={pt.value}>{pt.label}</option>
             ))}
           </select>
         </div>
 
         <div className="form-group">
-          <label>ระดับความรุนแรง</label>
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <label className="form-label">ระดับความรุนแรง</label>
+          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
             {SEVERITY_LEVELS.map(level => (
-              <button
-                key={level.value}
-                type="button"
+              <button key={level.value} type="button"
                 onClick={() => setSeverity(level.value)}
                 style={{
                   flex: 1,
-                  padding: '10px',
+                  padding: 'var(--space-2) var(--space-1)',
                   border: '2px solid',
-                  borderColor: severity === level.value ? level.color : '#e0e0e0',
-                  background: severity === level.value ? level.color : 'white',
-                  color: severity === level.value ? 'white' : '#333',
-                  borderRadius: '8px',
+                  borderColor: severity === level.value ? level.color : 'var(--color-border)',
+                  background: severity === level.value ? level.color : 'var(--color-surface)',
+                  color: severity === level.value ? '#fff' : 'var(--color-text)',
+                  borderRadius: 'var(--radius-md)',
                   cursor: 'pointer',
-                  fontWeight: severity === level.value ? '600' : '400'
-                }}
-              >
+                  fontWeight: severity === level.value ? '600' : '400',
+                  fontSize: 'var(--text-sm)',
+                  fontFamily: 'inherit',
+                  transition: 'all var(--transition-base)'
+                }}>
                 {level.label}
               </button>
             ))}
@@ -161,44 +130,27 @@ const ProblemReport = ({ type, id, onBack, onSuccess, isOnline }) => {
         </div>
 
         <div className="form-group">
-          <label>อธิบายปัญหา *</label>
-          <textarea
-            value={description}
+          <label className="form-label">อธิบายปัญหา *</label>
+          <textarea className="form-textarea" value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="อธิบายปัญหาที่พบโดยละเอียด..."
-            maxLength={1000}
-          />
-          <small style={{ color: '#999', fontSize: '12px' }}>
-            {description.length}/1000
-          </small>
+            placeholder="อธิบายปัญหาที่พบโดยละเอียด..." maxLength={1000} />
+          <p className="form-hint">{description.length}/1000</p>
         </div>
 
         <div className="form-group">
-          <label>รูปภาพประกอบ (แนะนำ)</label>
-          <PhotoUpload
-            onPhotoSelected={handlePhotoSelected}
-            photoPreview={photoPreview}
-            onRemove={handleRemovePhoto}
-          />
-          <small style={{ color: '#999', fontSize: '12px', display: 'block', marginTop: '6px' }}>
+          <label className="form-label">รูปภาพประกอบ (แนะนำ)</label>
+          <PhotoUpload onPhotoSelected={handlePhotoSelected} photoPreview={photoPreview} onRemove={handleRemovePhoto} />
+          <p className="form-hint" style={{ textAlign: 'left', color: 'var(--color-text-muted)' }}>
             ช่วยให้เข้าใจปัญหาได้ง่ายขึ้น
-          </small>
+          </p>
         </div>
 
-        <button
-          className="btn btn-danger"
-          onClick={handleSubmit}
-          disabled={loading}
-        >
+        <button className="btn btn-danger" onClick={handleSubmit} disabled={loading}>
           {loading ? 'กำลังส่ง...' : 'ส่งรายงานปัญหา'}
         </button>
 
-        <button
-          className="btn btn-secondary"
-          onClick={onBack}
-          style={{ marginTop: '10px' }}
-          disabled={loading}
-        >
+        <button className="btn btn-secondary" onClick={onBack}
+          style={{ marginTop: 'var(--space-2)' }} disabled={loading}>
           ยกเลิก
         </button>
       </div>

@@ -115,8 +115,8 @@ export default function Users() {
           action={{ label: 'เพิ่มผู้ใช้', onClick: openCreate }}
         />
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <table className="w-full">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+          <table className="w-full min-w-[500px]">
             <thead className="bg-gray-50">
               <tr>
                 <th className="text-left px-4 py-3 text-sm font-medium text-gray-500">ชื่อ</th>
@@ -167,10 +167,11 @@ export default function Users() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
             <h2 className="text-lg font-semibold mb-4">{editUser ? 'แก้ไขผู้ใช้' : 'เพิ่มผู้ใช้ใหม่'}</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" aria-label={editUser ? 'แก้ไขผู้ใช้' : 'เพิ่มผู้ใช้ใหม่'}>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ชื่อ *</label>
+                <label htmlFor="user-name" className="block text-sm font-medium text-gray-700 mb-1">ชื่อ *</label>
                 <input
+                  id="user-name"
                   type="text"
                   className="input"
                   value={form.name}
@@ -179,8 +180,9 @@ export default function Users() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
+                <label htmlFor="user-email" className="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
                 <input
+                  id="user-email"
                   type="email"
                   className="input"
                   value={form.email}
@@ -189,8 +191,9 @@ export default function Users() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">บทบาท</label>
+                <label htmlFor="user-role" className="block text-sm font-medium text-gray-700 mb-1">บทบาท</label>
                 <select
+                  id="user-role"
                   className="input"
                   value={form.role}
                   onChange={(e) => setForm({ ...form, role: e.target.value })}
@@ -201,8 +204,9 @@ export default function Users() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">LINE User ID</label>
+                <label htmlFor="user-line-id" className="block text-sm font-medium text-gray-700 mb-1">LINE User ID</label>
                 <input
+                  id="user-line-id"
                   type="text"
                   className="input"
                   value={form.line_user_id}
@@ -210,7 +214,7 @@ export default function Users() {
                   placeholder="Uxxxx..."
                 />
               </div>
-              {formError && <p className="text-sm text-red-600">{formError}</p>}
+              {formError && <p className="text-sm text-red-600" role="alert">{formError}</p>}
               <div className="flex gap-3 justify-end pt-2">
                 <button type="button" onClick={() => setShowForm(false)} className="btn btn-secondary">
                   ยกเลิก

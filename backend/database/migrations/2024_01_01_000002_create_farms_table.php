@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->string('location')->nullable();
-            $table->decimal('latitude', 10, 8)->nullable();
+            $table->decimal('latitude', 11, 8)->nullable();
             $table->decimal('longitude', 11, 8)->nullable();
             $table->string('qr_code')->nullable();
             $table->boolean('is_active')->default(true);

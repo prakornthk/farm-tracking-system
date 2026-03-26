@@ -21,7 +21,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-stone-50 to-primary-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-gray-50 to-primary-100 p-4">
       <div className="card max-w-sm w-full p-8 text-center shadow-lg">
         {/* Logo mark */}
         <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-100 rounded-2xl mb-5">

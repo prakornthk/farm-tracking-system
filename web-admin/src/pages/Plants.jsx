@@ -24,6 +24,7 @@ export default function Plants() {
   const [form, setForm] = useState({ name: '', status: 'healthy', planted_date: '', notes: '' });
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => {
     execute();
@@ -72,13 +73,14 @@ export default function Plants() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
+    setDeleteError('');
     setSaving(true);
     try {
       await plantsAPI.delete(plotId, deleteTarget.id);
       setDeleteTarget(null);
       execute();
     } catch (err) {
-      alert(err.response?.data?.message || 'ลบไม่สำเร็จ');
+      setDeleteError(err.response?.data?.message || 'ลบไม่สำเร็จ');
     } finally {
       setSaving(false);
     }

@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
+            'farm-access' => \App\Http\Middleware\CheckFarmAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

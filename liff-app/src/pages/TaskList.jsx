@@ -8,9 +8,7 @@ const TaskList = ({ userId, onBack, isOnline }) => {
   const [error, setError] = useState(null)
   const [completingId, setCompletingId] = useState(null)
 
-  useEffect(() => {
-    fetchTasks()
-  }, [userId])
+  useEffect(() => { fetchTasks() }, [userId])
 
   const fetchTasks = async () => {
     setLoading(true)
@@ -18,14 +16,14 @@ const TaskList = ({ userId, onBack, isOnline }) => {
     
     try {
       const res = await getTasks(userId)
-      // Backend returns paginated response: { data: { data: [...] } } or direct: { data: [...] }
-      const tasksData = res.data?.data ?? res.data ?? []
-      setTasks(Array.isArray(tasksData) ? tasksData : [])
+      setTasks(res.data || [])
     } catch (err) {
       console.error('Fetch tasks error:', err)
       if (err.offline) {
-        // Mock data for offline - align field names with real backend
-        setTasks([])
+        setTasks([
+          { id: 'task-1', title: 'รดน้ำต้นมะม่วง', target_type: 'plant', target_id: 'M-001', location: 'แปลง A', status: 'pending', due_date: new Date().toISOString() },
+          { id: 'task-2', title: 'ตรวจสอบแปลงทดลอง', target_type: 'plot', target_id: 'P-101', location: 'แปลง B', status: 'in-progress', due_date: new Date().toISOString() }
+        ])
       } else {
         setError('ไม่สามารถโหลดงานได้')
       }
@@ -36,94 +34,60 @@ const TaskList = ({ userId, onBack, isOnline }) => {
 
   const handleComplete = async (taskId) => {
     setCompletingId(taskId)
-    
     try {
       if (!isOnline) {
         addToOfflineQueue('task_complete', { taskId })
-        setTasks(prev => prev.map(t => 
-          t.id === taskId ? { ...t, status: 'completed' } : t
-        ))
+        setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'completed' } : t))
         setCompletingId(null)
         return
       }
-
       await completeTask(taskId)
-      setTasks(prev => prev.map(t => 
-        t.id === taskId ? { ...t, status: 'completed' } : t
-      ))
+      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'completed' } : t))
     } catch (err) {
       console.error('Complete task error:', err)
       if (err.offline) {
         addToOfflineQueue('task_complete', { taskId })
-        setTasks(prev => prev.map(t => 
-          t.id === taskId ? { ...t, status: 'completed' } : t
-        ))
+        setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'completed' } : t))
       }
     } finally {
       setCompletingId(null)
     }
   }
 
-  const getTaskIcon = (task) => {
-    if (task.plot_id) return '🗺️'
-    if (task.zone_id) return '🗺️'
-    return '📋'
+  const getTaskIcon = (type) => {
+    const icons = { plant: '🌿', plot: '🗺️' }
+    return icons[type] || '📋'
   }
 
-  const getTaskLocation = (task) => {
-    if (task.plot?.name) return task.plot.name
-    if (task.zone?.name) return task.zone.name
-    if (task.plot_id) return `Plot #${task.plot_id}`
-    if (task.zone_id) return `Zone #${task.zone_id}`
-    return ''
+  const getIconBg = (type) => {
+    const bgs = { plant: 'background: var(--color-primary-bg)', plot: 'background: var(--color-info-bg)' }
+    return bgs[type] || 'background: var(--color-border)'
   }
 
-  const getStatusLabel = (status) => {
-    switch (status) {
-      case 'pending': return 'รอดำเนินการ'
-      case 'in-progress': return 'กำลังทำ'
-      case 'completed': return 'เสร็จแล้ว'
-      default: return status
-    }
-  }
-
-  const getStatusClass = (status) => {
-    switch (status) {
-      case 'pending': return 'pending'
-      case 'in-progress': return 'in-progress'
-      case 'completed': return 'completed'
-      default: return ''
-    }
-  }
+  const getStatusLabel = { pending: 'รอดำเนินการ', 'in-progress': 'กำลังทำ', completed: 'เสร็จแล้ว' }
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
+    return new Date(dateString).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
   }
 
   const pendingTasks = tasks.filter(t => t.status !== 'completed')
   const completedTasks = tasks.filter(t => t.status === 'completed')
 
-  if (loading) {
-    return <Loading message="กำลังโหลดงาน..." />
-  }
+  if (loading) return <Loading message="กำลังโหลดงาน..." />
 
   return (
     <div className="container">
-      <button className="back-btn" onClick={onBack}>
-        ← กลับ
-      </button>
+      <button className="back-btn" onClick={onBack}>← กลับ</button>
 
-      <h2 style={{ marginBottom: '16px' }}>📋 งานที่ได้รับมอบหมาย</h2>
+      <h2 className="card-title" style={{ marginBottom: 'var(--space-4)' }}>
+        📋 งานที่ได้รับมอบหมาย
+      </h2>
 
       {error && (
-        <div className="error" style={{ marginBottom: '16px' }}>
+        <div className="error" style={{ marginBottom: 'var(--space-4)' }}>
           {error}
-          <button 
-            className="btn btn-secondary" 
-            onClick={fetchTasks}
-            style={{ marginTop: '10px', padding: '8px 16px' }}
-          >
+          <button className="btn btn-secondary" onClick={fetchTasks}
+            style={{ marginTop: 'var(--space-2)', padding: 'var(--space-2) var(--space-3)', fontSize: 'var(--text-xs)', width: 'auto' }}>
             ลองใหม่
           </button>
         </div>
@@ -131,33 +95,32 @@ const TaskList = ({ userId, onBack, isOnline }) => {
 
       {tasks.length === 0 && !error ? (
         <div className="empty-state">
-          <div className="icon">✅</div>
-          <p>ไม่มีงานที่ได้รับมอบหมาย</p>
+          <span className="empty-icon">✅</span>
+          <p className="empty-message">ไม่มีงานที่ได้รับมอบหมาย</p>
         </div>
       ) : (
         <>
-          {/* Pending Tasks */}
           {pendingTasks.length > 0 && (
             <ul className="task-list">
               {pendingTasks.map(task => (
                 <li key={task.id} className="task-item">
-                  <span className="task-icon">{getTaskIcon(task)}</span>
-                  <div className="task-content">
+                  <div className="task-icon" style={getIconBg(task.target_type)}>
+                    {getTaskIcon(task.target_type)}
+                  </div>
+                  <div className="task-body">
                     <div className="task-title">{task.title}</div>
                     <div className="task-meta">
-                      📍 {getTaskLocation(task) || 'ไม่ระบุ'}
+                      📍 {task.location || `${task.target_type} #${task.target_id}`}
                       {task.due_date && ` • กำหนด ${formatDate(task.due_date)}`}
                     </div>
-                    <span className={`status-badge ${getStatusClass(task.status)}`}>
-                      {getStatusLabel(task.status)}
+                    <span className={`status-badge ${task.status === 'in-progress' ? 'in-progress' : 'pending'}`}>
+                      {getStatusLabel[task.status]}
                     </span>
                   </div>
                   <div className="task-actions">
-                    <button
-                      className="complete-btn"
+                    <button className="complete-btn"
                       onClick={() => handleComplete(task.id)}
-                      disabled={completingId === task.id}
-                    >
+                      disabled={completingId === task.id}>
                       {completingId === task.id ? '...' : 'เสร็จ'}
                     </button>
                   </div>
@@ -166,26 +129,25 @@ const TaskList = ({ userId, onBack, isOnline }) => {
             </ul>
           )}
 
-          {/* Completed Tasks */}
           {completedTasks.length > 0 && (
-            <div style={{ marginTop: '24px' }}>
-              <h3 style={{ fontSize: '14px', color: '#666', marginBottom: '12px' }}>
-                ✓ เสร็จแล้ว ({completedTasks.length})
-              </h3>
+            <div style={{ marginTop: 'var(--space-6)' }}>
+              <div className="section-header">
+                <span className="section-title">✓ เสร็จแล้ว ({completedTasks.length})</span>
+              </div>
               <ul className="task-list">
                 {completedTasks.map(task => (
-                  <li key={task.id} className="task-item" style={{ opacity: 0.6 }}>
-                    <span className="task-icon">{getTaskIcon(task)}</span>
-                    <div className="task-content">
+                  <li key={task.id} className="task-item" style={{ opacity: 0.55 }}>
+                    <div className="task-icon" style={getIconBg(task.target_type)}>
+                      {getTaskIcon(task.target_type)}
+                    </div>
+                    <div className="task-body">
                       <div className="task-title" style={{ textDecoration: 'line-through' }}>
                         {task.title}
                       </div>
                       <div className="task-meta">
-                        📍 {getTaskLocation(task) || 'ไม่ระบุ'}
+                        📍 {task.location || `${task.target_type} #${task.target_id}`}
                       </div>
-                      <span className={`status-badge ${getStatusClass(task.status)}`}>
-                        {getStatusLabel(task.status)}
-                      </span>
+                      <span className="status-badge completed">เสร็จแล้ว</span>
                     </div>
                   </li>
                 ))}

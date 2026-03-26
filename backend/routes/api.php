@@ -25,7 +25,7 @@ Route::get('/health', function () {
 });
 
 // Public routes (no authentication required)
-Route::prefix('auth')->group(function () {
+Route::prefix('auth')->middleware('throttle:auth')->group(function () {
     // LINE Login
     Route::post('/line/callback', [AuthController::class, 'lineCallback']);
     Route::post('/line/login', [AuthController::class, 'lineLogin']);
@@ -50,7 +50,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Farms (nested under farms for clarity)
-    Route::prefix('farms')->group(function () {
+    Route::prefix('farms')->middleware('farm-access')->group(function () {
         Route::get('/', [FarmController::class, 'index']);
         Route::post('/', [FarmController::class, 'store']);
         Route::get('/{id}', [FarmController::class, 'show']);
@@ -72,7 +72,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Zones (direct access with zone ID)
-    Route::prefix('zones')->group(function () {
+    Route::prefix('zones')->middleware('farm-access')->group(function () {
         Route::get('/{id}', [ZoneController::class, 'show']);
         Route::put('/{id}', [ZoneController::class, 'update']);
         Route::delete('/{id}', [ZoneController::class, 'destroy']);
@@ -86,7 +86,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Plots (direct access)
-    Route::prefix('plots')->group(function () {
+    Route::prefix('plots')->middleware('farm-access')->group(function () {
         Route::get('/{id}', [PlotController::class, 'show']);
         Route::put('/{id}', [PlotController::class, 'update']);
         Route::delete('/{id}', [PlotController::class, 'destroy']);
@@ -104,7 +104,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Plants (direct access)
-    Route::prefix('plants')->group(function () {
+    Route::prefix('plants')->middleware('farm-access')->group(function () {
         Route::get('/{id}', [PlantController::class, 'show']);
         Route::put('/{id}', [PlantController::class, 'update']);
         Route::delete('/{id}', [PlantController::class, 'destroy']);
@@ -151,7 +151,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // LINE Notify
-    Route::prefix('line-notify')->group(function () {
+    Route::prefix('line-notify')->middleware('throttle:line-notify')->group(function () {
         Route::post('/send', [LineNotifyController::class, 'send']);
         Route::post('/send-with-image', [LineNotifyController::class, 'sendWithImage']);
         Route::post('/send-task', [LineNotifyController::class, 'sendTaskNotification']);

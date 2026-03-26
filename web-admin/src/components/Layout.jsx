@@ -66,8 +66,9 @@ export default function Layout() {
             <button
               className="lg:hidden text-gray-500 hover:text-gray-700"
               onClick={() => setSidebarOpen(false)}
+              aria-label="ปิดเมนู"
             >
-              <X size={20} />
+              <X size={20} aria-hidden="true" />
             </button>
           </div>
 
@@ -106,8 +107,9 @@ export default function Layout() {
             <button
               onClick={handleLogout}
               className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+              aria-label="ออกจากระบบ"
             >
-              <LogOut size={18} />
+              <LogOut size={18} aria-hidden="true" />
               ออกจากระบบ
             </button>
           </div>
@@ -122,12 +124,13 @@ export default function Layout() {
             <button
               className="lg:hidden mr-3 text-gray-500 hover:text-gray-700"
               onClick={() => setSidebarOpen(true)}
+              aria-label="เปิดเมนู"
             >
               <Menu size={24} />
             </button>
 
             {/* Breadcrumb */}
-            <div className="flex items-center gap-1 text-sm text-gray-500 overflow-x-auto">
+            <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-sm text-gray-500 overflow-x-auto">
               <Link to="/dashboard" className="hover:text-green-600 whitespace-nowrap">Home</Link>
               {location.pathname !== '/dashboard' && (
                 <>
@@ -137,7 +140,7 @@ export default function Layout() {
                   </span>
                 </>
               )}
-            </div>
+            </nav>
           </div>
         </header>
 

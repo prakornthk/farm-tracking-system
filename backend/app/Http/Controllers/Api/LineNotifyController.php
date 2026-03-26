@@ -237,12 +237,14 @@ class LineNotifyController extends ApiController
     private function buildTaskMessage($task, string $action): string
     {
         $farmName = $task->farm->name;
+        $dueStr = $task->due_date ? $task->due_date->format('d/m/Y') : 'No due date';
+        $dueOverdueStr = $task->due_date ? $task->due_date->format('d/m/Y') : '';
 
         return match ($action) {
             'created' => "📋 [{$farmName}]\nNew task created: {$task->title}\nPriority: {$task->priority}",
-            'assigned' => "📋 [{$farmName}]\nYou have been assigned: {$task->title}\nDue: {$task->due_date?->format('d/m/Y') ?? 'No due date'}",
+            'assigned' => "📋 [{$farmName}]\nYou have been assigned: {$task->title}\nDue: {$dueStr}",
             'completed' => "✅ [{$farmName}]\nTask completed: {$task->title}",
-            'overdue' => "⚠️ [{$farmName}]\nOverdue task: {$task->title}\nWas due: {$task->due_date?->format('d/m/Y')}",
+            'overdue' => "⚠️ [{$farmName}]\nOverdue task: {$task->title}\nWas due: {$dueOverdueStr}",
             default => "📋 [{$farmName}]\nTask update: {$task->title}",
         };
     }
