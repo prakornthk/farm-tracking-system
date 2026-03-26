@@ -157,8 +157,8 @@ export default function Tasks() {
               </div>
               {isManager() && (
                 <div className="flex gap-0.5 flex-shrink-0">
-                  <button onClick={() => openEdit(task)} className="btn-icon" aria-label="แก้ไขงาน"><Edit2 size={14} /></button>
-                  <button onClick={() => setDeleteTarget(task)} className="btn-icon hover:text-danger" aria-label="ลบงาน"><Trash2 size={14} /></button>
+                  <button onClick={() => openEdit(task)} className="btn-icon" aria-label={`แก้ไขงาน ${task.title}`}><Edit2 size={14} aria-hidden="true" /></button>
+                  <button onClick={() => setDeleteTarget(task)} className="btn-icon hover:text-red-600" aria-label={`ลบงาน ${task.title}`}><Trash2 size={14} aria-hidden="true" /></button>
                 </div>
               )}
             </div>

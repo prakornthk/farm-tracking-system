@@ -20,9 +20,21 @@ const ACTION_BG = {
   report:    'var(--color-danger-bg)',
 }
 
+const ACTION_LABELS = {
+  water:     'รดน้ำ',
+  fertilize: 'ใส่ปุ๋ย',
+  prune:     'ตัดแต่ง',
+  inspect:   'ตรวจสอบ',
+  harvest:   'เก็บเกี่ยว',
+  report:    'แจ้งปัญหา',
+  plant:     'ปลูก',
+  create:    'สร้าง',
+}
+
 const ActivityItem = React.memo(({ activity }) => {
   const icon = ACTION_ICONS[activity.action_type] || '📝'
   const iconBg = ACTION_BG[activity.action_type] || 'var(--color-border)'
+  const actionLabel = ACTION_LABELS[activity.action_type] || activity.action_type
 
   const formatDate = (dateString) => {
     const date = new Date(dateString)
@@ -42,12 +54,14 @@ const ActivityItem = React.memo(({ activity }) => {
   const formattedDate = useMemo(() => formatDate(activity.created_at), [activity.created_at])
 
   return (
-    <div className="activity-item">
-      <div className="activity-icon" style={{ background: iconBg }}>
+    <div className="activity-item" role="listitem">
+      <div className="activity-icon" style={{ background: iconBg }} aria-hidden="true">
         {icon}
       </div>
       <div className="activity-body">
-        <div className="activity-action">{activity.action_display || activity.action_type}</div>
+        <div className="activity-action" aria-label={`การดำเนินการ: ${actionLabel}`}>
+          {activity.action_display || actionLabel}
+        </div>
         <div className="activity-meta">
           <span>{formattedDate}</span>
           {activity.user_name && <span>{activity.user_name}</span>}

@@ -110,8 +110,8 @@ export default function Problems() {
                 </div>
                 {isManager() && (
                   <div className="flex gap-0.5 flex-shrink-0">
-                    <button onClick={() => openEdit(p)} className="btn-icon" aria-label="แก้ไขปัญหา"><Edit2 size={14} /></button>
-                    <button onClick={() => setDeleteTarget(p)} className="btn-icon hover:text-danger" aria-label="ลบปัญหา"><Trash2 size={14} /></button>
+                    <button onClick={() => openEdit(p)} className="btn-icon" aria-label={`แก้ไขปัญหา ${p.title}`}><Edit2 size={14} aria-hidden="true" /></button>
+                    <button onClick={() => setDeleteTarget(p)} className="btn-icon hover:text-red-600" aria-label={`ลบปัญหา ${p.title}`}><Trash2 size={14} aria-hidden="true" /></button>
                   </div>
                 )}
               </div>

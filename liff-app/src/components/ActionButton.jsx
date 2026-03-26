@@ -17,8 +17,10 @@ const ActionButton = ({ action, onClick }) => {
     <button
       className={`action-btn${isReport ? ' report' : ''}`}
       onClick={() => onClick(action)}
+      aria-label={config.label}
+      type="button"
     >
-      <span className="icon">{config.icon}</span>
+      <span className="icon" aria-hidden="true">{config.icon}</span>
       <span className="label">{config.label}</span>
     </button>
   )

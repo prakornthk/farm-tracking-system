@@ -120,7 +120,9 @@ const TaskList = ({ userId, onBack, isOnline }) => {
                   <div className="task-actions">
                     <button className="complete-btn"
                       onClick={() => handleComplete(task.id)}
-                      disabled={completingId === task.id}>
+                      disabled={completingId === task.id}
+                      aria-label={completingId === task.id ? 'กำลังดำเนินการ...' : `ทำเครื่องหมายงาน "${task.title}" เสร็จแล้ว`}
+                    >
                       {completingId === task.id ? '...' : 'เสร็จ'}
                     </button>
                   </div>

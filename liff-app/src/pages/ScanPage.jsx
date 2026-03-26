@@ -83,14 +83,16 @@ const ScanPage = ({ type, id, onSelectAction }) => {
           <span className="section-title">กิจกรรมล่าสุด</span>
         </div>
         {activities.length === 0 ? (
-          <div className="empty-state" style={{ padding: 'var(--space-5) 0' }}>
-            <span className="empty-icon">📋</span>
+          <div className="empty-state" style={{ padding: 'var(--space-5) 0' }} role="status">
+            <span className="empty-icon" aria-hidden="true">📋</span>
             <p className="empty-message">ยังไม่มีกิจกรรม</p>
           </div>
         ) : (
-          activities.map((activity, index) => (
-            <ActivityItem key={activity.id || index} activity={activity} />
-          ))
+          <div role="list" aria-label="กิจกรรมล่าสุด">
+            {activities.map((activity, index) => (
+              <ActivityItem key={activity.id || index} activity={activity} />
+            ))}
+          </div>
         )}
       </div>
     </div>
