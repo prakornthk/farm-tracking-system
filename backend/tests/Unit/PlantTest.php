@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Models\Plant;
+use App\Models\Activity;
 use PHPUnit\Framework\TestCase;
 
 class PlantTest extends TestCase
@@ -43,10 +44,10 @@ class PlantTest extends TestCase
     public function test_qr_data_attribute(): void
     {
         $plant = new Plant();
-        $plant->id = 1;
+        $plant->qr_code_data = json_encode(['type' => 'plant', 'plant_id' => 1]);
 
-        // Since plant requires plot relationship, we'll test the structure
-        $this->assertIsString($plant->getQrDataAttribute());
+        $this->assertIsArray($plant->qr_data);
+        $this->assertEquals('plant', $plant->qr_data['type']);
     }
 
     /**
@@ -67,6 +68,28 @@ class PlantTest extends TestCase
             'other'
         ];
 
-        $this->assertEquals($types, \App\Models\Activity::ACTIVITY_TYPES);
+        $this->assertEquals($types, Activity::ACTIVITY_TYPES);
+    }
+
+    /**
+     * Test days since planted returns null when no date.
+     */
+    public function test_days_since_planted_returns_null_when_no_date(): void
+    {
+        $plant = new Plant();
+        $plant->planted_date = null;
+
+        $this->assertNull($plant->days_since_planted);
+    }
+
+    /**
+     * Test days until harvest returns null when no date.
+     */
+    public function test_days_until_harvest_returns_null_when_no_date(): void
+    {
+        $plant = new Plant();
+        $plant->expected_harvest_date = null;
+
+        $this->assertNull($plant->days_until_harvest);
     }
 }
