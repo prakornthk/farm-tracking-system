@@ -3,36 +3,31 @@ import React, { useRef } from 'react'
 const PhotoUpload = ({ onPhotoSelected, photoPreview, onRemove }) => {
   const fileInputRef = useRef(null)
 
-  const handleClick = () => {
-    fileInputRef.current?.click()
-  }
+  const handleClick = () => fileInputRef.current?.click()
 
   const handleChange = (e) => {
     const file = e.target.files?.[0]
-    if (file) {
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('ไฟล์มีขนาดใหญ่เกิน 5MB')
-        return
-      }
-      
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        alert('กรุณาเลือกไฟล์รูปภาพ')
-        return
-      }
+    if (!file) return
 
-      onPhotoSelected(file)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('ไฟล์มีขนาดใหญ่เกิน 5MB')
+      return
     }
-    // Reset input so same file can be selected again
-    e.target.value = ''
+
+    if (!file.type.startsWith('image/')) {
+      alert('กรุณาเลือกไฟล์รูปภาพ')
+      return
+    }
+
+    onPhotoSelected(file)
+    e.target.value = '' // reset so same file can be selected again
   }
 
   if (photoPreview) {
     return (
       <div className="photo-preview">
-        <img src={photoPreview} alt="Preview" />
-        <button className="remove-btn" onClick={onRemove} type="button">
+        <img src={photoPreview} alt="ตัวอย่างรูปภาพ" />
+        <button className="remove-btn" onClick={onRemove} type="button" aria-label="ลบรูปภาพ">
           ✕
         </button>
       </div>
@@ -40,8 +35,8 @@ const PhotoUpload = ({ onPhotoSelected, photoPreview, onRemove }) => {
   }
 
   return (
-    <div 
-      className="photo-upload" 
+    <div
+      className="photo-upload"
       onClick={handleClick}
       onKeyDown={(e) => e.key === 'Enter' && handleClick()}
       role="button"
@@ -57,8 +52,11 @@ const PhotoUpload = ({ onPhotoSelected, photoPreview, onRemove }) => {
         style={{ display: 'none' }}
         aria-hidden="true"
       />
-      <div className="icon" aria-hidden="true">📷</div>
-      <p>แตะเพื่อถ่ายรูปหรือเลือกรูปภาพ</p>
+      <div className="upload-icon" aria-hidden="true">📷</div>
+      <p>
+        แตะเพื่อถ่ายรูปหรือเลือกรูปภาพ
+        <span>รองรับไฟล์ JPG, PNG ขนาดไม่เกิน 5MB</span>
+      </p>
     </div>
   )
 }

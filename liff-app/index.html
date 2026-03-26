@@ -3,12 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#4CAF50" />
+    <meta name="theme-color" content="#4CAF50" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#388E3C" media="(prefers-color-scheme: dark)" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Farm Tracking" />
     <meta name="description" content="ระบบติดตามและบันทึกกิจกรรมในไร่/สวนผ่าน LINE" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <!-- Preconnect to API base to reduce connection latency -->
+    <link rel="preconnect" href="https://api.farm-system.example.com" crossorigin />
+    <!-- DNS prefetch for LIFF SDK endpoint -->
+    <link rel="dns-prefetch" href="https://api.line.me" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
+    <!-- PWA manifest for installability -->
+    <link rel="manifest" href="/manifest.webmanifest" />
     <title>Farm Tracking</title>
   </head>
   <body>

@@ -1,0 +1,19 @@
+{
+  "name": "Farm Tracking",
+  "short_name": "Farm",
+  "description": "ระบบติดตามและบันทึกกิจกรรมในไร่/สวนผ่าน LINE",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f5f0",
+  "theme_color": "#4CAF50",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "lang": "th"
+}
