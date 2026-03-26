@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { Plus, Edit2, Trash2, ArrowLeft, Map, ChevronRight } from 'lucide-react';
+import { Plus, Edit2, Trash2, ArrowLeft, Map, ChevronRight, Grid3x3 } from 'lucide-react';
 import { useApi } from '../hooks/useApi';
 import { zonesAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -79,15 +79,16 @@ export default function Zones() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate('/farms')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-          <ArrowLeft size={20} />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">โซนในฟาร์ม</h1>
-          <p className="text-sm text-gray-500 mt-0.5">ฟาร์ม #{farmId}</p>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate('/farms')} className="p-2 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-700 transition-colors">
+            <ArrowLeft size={20} />
+          </button>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">โซนในฟาร์ม</h1>
+            <p className="text-sm text-gray-500 mt-0.5">ฟาร์ม #{farmId}</p>
+          </div>
         </div>
-      </div>
         {isManager() && (
           <button onClick={openCreate} className="btn btn-primary">
             <Plus size={16} />
