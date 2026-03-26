@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import PhotoUpload from '../components/PhotoUpload'
 import { logActivity, addToOfflineQueue } from '../services/api'
 import { ACTION_CONFIG } from '../components/ActionButton'
@@ -12,14 +12,22 @@ const ActionForm = ({ type, id, action, onBack, onSuccess, isOnline }) => {
 
   const actionConfig = ACTION_CONFIG[action] || { icon: '❓', label: action }
 
+  // Clean up FileReader preview URL on unmount
+  useEffect(() => {
+    return () => {
+      if (photoPreview) URL.revokeObjectURL(photoPreview)
+    }
+  }, [photoPreview])
+
   const handlePhotoSelected = (file) => {
     setPhoto(file)
-    const reader = new FileReader()
-    reader.onloadend = () => { setPhotoPreview(reader.result) }
-    reader.readAsDataURL(file)
+    // Use object URL — properly cleaned up in useEffect above
+    const objectUrl = URL.createObjectURL(file)
+    setPhotoPreview(objectUrl)
   }
 
   const handleRemovePhoto = () => {
+    if (photoPreview) URL.revokeObjectURL(photoPreview)
     setPhoto(null)
     setPhotoPreview(null)
   }
@@ -38,7 +46,7 @@ const ActionForm = ({ type, id, action, onBack, onSuccess, isOnline }) => {
 
     try {
       if (!isOnline) {
-        addToOfflineQueue('activity', activityData)
+        await addToOfflineQueue('activity', activityData)
         onSuccess()
         return
       }
@@ -55,7 +63,7 @@ const ActionForm = ({ type, id, action, onBack, onSuccess, isOnline }) => {
     } catch (err) {
       console.error('Submit error:', err)
       if (err.offline) {
-        addToOfflineQueue('activity', activityData)
+        await addToOfflineQueue('activity', activityData)
         onSuccess()
       } else {
         setError('ไม่สามารถบันทึกได้ กรุณาลองใหม่')

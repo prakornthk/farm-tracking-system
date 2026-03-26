@@ -126,12 +126,14 @@ export default function Plants() {
                     <button
                       onClick={() => openEdit(plant)}
                       className="p-1.5 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50"
+                      aria-label="แก้ไขต้นไม้"
                     >
                       <Edit2 size={16} />
                     </button>
                     <button
                       onClick={() => setDeleteTarget(plant)}
                       className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50"
+                      aria-label="ลบต้นไม้"
                     >
                       <Trash2 size={16} />
                     </button>

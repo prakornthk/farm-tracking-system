@@ -28,13 +28,6 @@ export default function PlotQR() {
     execute();
   }, [plotId]);
 
-  const safeSvgHtml = (rawHtml) => {
-    if (!rawHtml) return '';
-    return rawHtml
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-  };
-
   const handlePrint = () => {
     const plotName = escapeHtml(plot?.name || `แปลง #${plotId}`);
     const plantType = escapeHtml(plot?.plant_type || '');
@@ -53,7 +46,7 @@ export default function PlotQR() {
         </head>
         <body>
           <div id="plot-qr-svg" class="flex justify-center mb-4">
-            ${safeSvgHtml(printRef.current.innerHTML)}
+            ${printRef.current.innerHTML}
           </div>
           <h2>${plotName}</h2>
           ${plantType ? `<p>🌱 ${plantType}</p>` : ''}

@@ -28,10 +28,10 @@ export function ErrorAlert({ message, onRetry }) {
 
 export function EmptyState({ icon: Icon, title, description, action }) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
+    <div className="flex flex-col items-center justify-center py-12 text-center" role="status">
       {Icon && <Icon size={48} className="text-gray-300 mb-4" aria-hidden="true" />}
       <h3 className="text-lg font-medium text-gray-900 mb-1">{title}</h3>
-      {description && <p className="text-sm text-gray-500 mb-4">{description}</p>}
+      {description && <p className="text-sm text-gray-500 mb-4 max-w-xs">{description}</p>}
       {action && (
         <button onClick={action.onClick} className="btn btn-primary">
           {action.label}
@@ -49,11 +49,12 @@ export function ConfirmModal({ open, title, message, onConfirm, onCancel, loadin
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-modal-title"
+      aria-describedby="confirm-modal-desc"
     >
       <div className="bg-white rounded-xl shadow-xl max-w-sm w-full mx-4 p-6">
         <h3 id="confirm-modal-title" className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-        <p className="text-sm text-gray-600 mb-4">{message}</p>
-        {error && <p className="text-sm text-danger mb-4" role="alert">{error}</p>}
+        <p id="confirm-modal-desc" className="text-sm text-gray-600 mb-4">{message}</p>
+        {error && <p className="text-sm text-red-600 mb-4" role="alert">{error}</p>}
         <div className="flex gap-3 justify-end">
           <button onClick={onCancel} className="btn btn-secondary" disabled={loading}>ยกเลิก</button>
           <button onClick={onConfirm} className="btn btn-danger" disabled={loading} aria-busy={loading}>

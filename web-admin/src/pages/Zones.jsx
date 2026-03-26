@@ -114,12 +114,14 @@ export default function Zones() {
                     <button
                       onClick={() => openEdit(zone)}
                       className="p-1.5 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50"
+                      aria-label="แก้ไขโซน"
                     >
                       <Edit2 size={16} />
                     </button>
                     <button
                       onClick={() => setDeleteTarget(zone)}
                       className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50"
+                      aria-label="ลบโซน"
                     >
                       <Trash2 size={16} />
                     </button>

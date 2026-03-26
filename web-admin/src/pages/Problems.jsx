@@ -110,8 +110,8 @@ export default function Problems() {
                 </div>
                 {isManager() && (
                   <div className="flex gap-0.5 flex-shrink-0">
-                    <button onClick={() => openEdit(p)} className="btn-icon"><Edit2 size={14} /></button>
-                    <button onClick={() => setDeleteTarget(p)} className="btn-icon hover:text-danger"><Trash2 size={14} /></button>
+                    <button onClick={() => openEdit(p)} className="btn-icon" aria-label="แก้ไขปัญหา"><Edit2 size={14} /></button>
+                    <button onClick={() => setDeleteTarget(p)} className="btn-icon hover:text-danger" aria-label="ลบปัญหา"><Trash2 size={14} /></button>
                   </div>
                 )}
               </div>
@@ -169,7 +169,7 @@ export default function Problems() {
       <ConfirmModal
         open={!!deleteTarget}
         title="ลบปัญหา"
-        message={`ต้องการลบปัญหา "${deleteTarget?.title}" �หรือไม่?`}
+        message={`ต้องการลบปัญหา "${deleteTarget?.title}" หรือไม่?`}
         onConfirm={handleDelete}
         onCancel={() => { setDeleteTarget(null); setDeleteError(''); }}
         loading={saving}

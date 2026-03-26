@@ -44,7 +44,7 @@ const withRetry = async (fn, retries = MAX_RETRIES) => {
 
 // Activity Actions
 export const logActivity = async (data) => {
-  return api.post('/activities', data)
+  return withRetry(() => api.post('/activities', data))
 }
 
 export const getActivities = async (type, id, limit = 10) => {
@@ -62,103 +62,153 @@ export const getTasks = async (userId) => {
 }
 
 export const completeTask = async (taskId) => {
-  return api.patch(`/tasks/${taskId}/complete`)
+  return withRetry(() => api.patch(`/tasks/${taskId}/complete`))
 }
 
 // Problem Reports
 export const submitProblemReport = async (formData) => {
-  return api.post('/problems', formData, {
+  return withRetry(() => api.post('/problems', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
+  }))
+}
+
+// ── Offline Queue ─────────────────────────────────────────────
+// Photos are too large for localStorage and File objects cannot be JSON-serialized.
+// We use IndexedDB (via idb-keyval-like API) to persist photo Blobs separately,
+// keyed by the same photoId used in the queue.
+//
+// Storage budget: ~5MB localStorage for queue metadata, unlimited IndexedDB for photos.
+
+const OFFLINE_QUEUE_KEY = 'farm_offline_queue'
+
+// ── IndexedDB wrapper for photo blob storage ──
+const DB_NAME = 'farm_liff_db'
+const DB_VERSION = 1
+const PHOTO_STORE = 'photos'
+
+const openPhotoDB = () => new Promise((resolve, reject) => {
+  const req = indexedDB.open(DB_NAME, DB_VERSION)
+  req.onerror = () => reject(req.error)
+  req.onsuccess = () => resolve(req.result)
+  req.onupgradeneeded = (e) => {
+    const db = e.target.result
+    if (!db.objectStoreNames.contains(PHOTO_STORE)) {
+      db.createObjectStore(PHOTO_STORE, { keyPath: 'id' })
+    }
+  }
+})
+
+const photoDBGet = async (id) => {
+  const db = await openPhotoDB()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(PHOTO_STORE, 'readonly')
+    const store = tx.objectStore(PHOTO_STORE)
+    const req = store.get(id)
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
   })
 }
 
-// Offline Queue - Photo handling
-// Photos (File objects) cannot be JSON serialized, so we store them separately
-// and use blob URLs or store the data differently
-const OFFLINE_QUEUE_KEY = 'farm_offline_queue'
-const OFFLINE_PHOTOS_KEY = 'farm_offline_photos'
-
-// Store photo data separately from queue items
-const storePhoto = (photoFile) => {
-  if (!photoFile) return null
-  const photoId = `photo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-  return photoId
+const photoDBPut = async ({ id, blob, timestamp }) => {
+  const db = await openPhotoDB()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(PHOTO_STORE, 'readwrite')
+    const store = tx.objectStore(PHOTO_STORE)
+    const req = store.put({ id, blob, timestamp })
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+  })
 }
 
-const getPhotoStore = () => {
-  try {
-    return JSON.parse(localStorage.getItem(OFFLINE_PHOTOS_KEY) || '{}')
-  } catch {
-    return {}
-  }
+const photoDBDelete = async (id) => {
+  const db = await openPhotoDB()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(PHOTO_STORE, 'readwrite')
+    const store = tx.objectStore(PHOTO_STORE)
+    const req = store.delete(id)
+    req.onsuccess = () => resolve()
+    req.onerror = () => reject(req.error)
+  })
 }
 
-const setPhotoStore = (store) => {
-  localStorage.setItem(OFFLINE_PHOTOS_KEY, JSON.stringify(store))
+const photoDBClear = async () => {
+  const db = await openPhotoDB()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(PHOTO_STORE, 'readwrite')
+    const store = tx.objectStore(PHOTO_STORE)
+    const req = store.clear()
+    req.onsuccess = () => resolve()
+    req.onerror = () => reject(req.error)
+  })
 }
 
-// Serialize queue item - handle File objects properly
-const serializeQueueItem = (action, data) => {
+// ── Queue operations ──
+
+const generateId = () => `${Date.now()}_${Math.random().toString(36).slice(2, 11)}`
+
+// Serialize queue item — store File/Blob photos in IndexedDB, keep only the reference in localStorage queue
+const serializeQueueItem = async (action, data) => {
   const serialized = { ...data }
-  
-  // Store photo File as a reference, not the actual File object
-  // We can't serialize File objects to JSON
+  const photoIdsToCleanup = []
+
   if (serialized.photo && serialized.photo instanceof File) {
-    const photoId = storePhoto(serialized.photo)
+    const photoId = generateId()
     serialized._photoId = photoId
-    // Store the photo data separately
-    const photoStore = getPhotoStore()
-    // Convert File to storable format using FileReader
-    const reader = new FileReader()
-    // We'll store the base64 for offline - note: this increases storage usage
-    // but is necessary for offline photo persistence
-    // For very large photos, consider just storing the reference and losing the photo
-    photoStore[photoId] = serialized.photo
-    setPhotoStore(photoStore)
+    // Store blob in IndexedDB (persists across page refreshes)
+    try {
+      await photoDBPut({ id: photoId, blob: serialized.photo, timestamp: Date.now() })
+    } catch (e) {
+      console.error('Failed to store photo in IndexedDB:', e)
+      // If storage fails (quota exceeded, private browsing, etc.),
+      // remove photo from queued data so the action still syncs without the photo.
+      // The user will need to re-add the photo when back online.
+      delete serialized.photo
+      delete serialized._photoId
+    }
     delete serialized.photo
   }
-  
+
   return {
+    id: generateId(),
     action,
     data: serialized,
     timestamp: Date.now()
   }
 }
 
-// Deserialize queue item - restore File objects from stored photos
-const deserializeQueueItem = (item) => {
-  if (!item) return item
-  const deserialized = { ...item, data: { ...item.data } }
-  
-  if (deserialized.data._photoId) {
-    const photoStore = getPhotoStore()
-    const photo = photoStore[deserialized.data._photoId]
-    if (photo) {
-      deserialized.data.photo = photo
-    }
-    delete deserialized.data._photoId
+// Restore Blob from IndexedDB back into a File-like object for FormData upload
+const restorePhotoFromDB = async (photoId) => {
+  try {
+    const record = await photoDBGet(photoId)
+    if (!record) return null
+    // Reconstruct a File from the stored Blob (Blob is File's parent, acceptable for FormData)
+    return record.blob
+  } catch (e) {
+    console.error('Failed to restore photo from IndexedDB:', e)
+    return null
   }
-  
-  return deserialized
 }
 
-export const addToOfflineQueue = (action, data) => {
+export const addToOfflineQueue = async (action, data) => {
   const queue = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]')
-  const serializedItem = serializeQueueItem(action, data)
-  queue.push(serializedItem)
-  localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue))
+  try {
+    const serializedItem = await serializeQueueItem(action, data)
+    queue.push(serializedItem)
+    localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue))
+  } catch (e) {
+    console.error('Failed to serialize queue item:', e)
+    throw e
+  }
 }
 
 export const getOfflineQueue = () => {
-  const queue = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]')
-  // Note: File objects in queue are stored as references, not actual Files
-  // They are restored when sync runs
-  return queue
+  return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]')
 }
 
 export const clearOfflineQueue = () => {
   localStorage.removeItem(OFFLINE_QUEUE_KEY)
-  localStorage.removeItem(OFFLINE_PHOTOS_KEY)
+  // Also clear photo blobs from IndexedDB
+  photoDBClear().catch(console.error)
 }
 
 export const syncOfflineQueue = async () => {
@@ -167,53 +217,66 @@ export const syncOfflineQueue = async () => {
 
   let synced = 0
   const failedItems = []
+  const syncedPhotoIds = []
 
   for (const item of queue) {
     try {
-      const deserializedItem = deserializeQueueItem(item)
-      
-      switch (deserializedItem.action) {
+      // Restore photo Blob from IndexedDB if needed
+      const itemData = { ...item.data }
+      if (itemData._photoId) {
+        const restoredPhoto = await restorePhotoFromDB(itemData._photoId)
+        if (restoredPhoto) {
+          itemData.photo = restoredPhoto
+        }
+        delete itemData._photoId
+      }
+
+      switch (item.action) {
         case 'activity': {
           const formData = new FormData()
-          const { photo, ...rest } = deserializedItem.data
+          const { photo, ...rest } = itemData
           for (const [key, value] of Object.entries(rest)) {
             if (value != null) formData.append(key, value)
           }
-          if (photo instanceof File) {
-            formData.append('photo', photo)
-          }
+          if (photo) formData.append('photo', photo)
           await logActivity(formData)
           break
         }
         case 'problem': {
           const formData = new FormData()
-          const { photo, ...rest } = deserializedItem.data
+          const { photo, ...rest } = itemData
           for (const [key, value] of Object.entries(rest)) {
             if (value != null) formData.append(key, value)
           }
-          if (photo instanceof File) {
-            formData.append('photo', photo)
-          }
+          if (photo) formData.append('photo', photo)
           await submitProblemReport(formData)
           break
         }
         case 'task_complete':
-          await completeTask(deserializedItem.data.taskId)
+          await completeTask(itemData.taskId)
           break
+      }
+
+      // Clean up IndexedDB entry for successfully synced photos
+      if (item.data._photoId) {
+        syncedPhotoIds.push(item.data._photoId)
       }
       synced++
     } catch (e) {
-      console.error('Sync failed for item:', item, e)
+      console.error('Sync failed for item:', item.id, e)
       failedItems.push(item)
     }
   }
-  
+
+  // Remove synced photo blobs from IndexedDB
+  await Promise.all(syncedPhotoIds.map(id => photoDBDelete(id).catch(() => {})))
+
   if (failedItems.length === 0) {
     clearOfflineQueue()
   } else {
     localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(failedItems))
   }
-  
+
   return { synced, remaining: failedItems.length }
 }
 

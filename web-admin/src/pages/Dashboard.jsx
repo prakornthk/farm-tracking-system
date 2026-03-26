@@ -5,6 +5,16 @@ import { useApi } from '../hooks/useApi';
 import { dashboardAPI } from '../services/api';
 import { LoadingSpinner, ErrorAlert } from '../components/Shared';
 
+function StatCardSkeleton() {
+  return (
+    <div className="card-padded animate-pulse">
+      <div className="inline-flex p-2 rounded-lg mb-3 bg-gray-100 w-9 h-9" />
+      <div className="h-8 bg-gray-100 rounded w-16 mb-2" />
+      <div className="h-4 bg-gray-100 rounded w-24" />
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const { data, loading, error, execute } = useApi(() => dashboardAPI.todayStats());
 
@@ -22,7 +32,27 @@ export default function Dashboard() {
     { label: 'ปัญหาเปิด',     value: stats.open_problems,     icon: AlertTriangle, bg: 'bg-yellow-50', text: 'text-yellow-600',link: '/problems' },
   ];
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return (
+    <div>
+      <h1 className="page-title mb-6">แดชบอร์ด</h1>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        {[...Array(4)].map((_, i) => <StatCardSkeleton key={i} />)}
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="card-padded animate-pulse">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gray-100 rounded-lg flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-gray-100 rounded w-3/4" />
+                <div className="h-3 bg-gray-100 rounded w-1/2" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
   if (error) return <ErrorAlert message={error} onRetry={execute} />;
 
   return (

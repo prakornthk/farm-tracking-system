@@ -110,7 +110,7 @@ export default function Layout() {
               aria-label="ออกจากระบบ"
             >
               <LogOut size={18} aria-hidden="true" />
-              ออกจากระบบ
+              <span>ออกจากระบบ</span>
             </button>
           </div>
         </div>

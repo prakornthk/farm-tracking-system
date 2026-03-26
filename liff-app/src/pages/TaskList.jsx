@@ -36,7 +36,7 @@ const TaskList = ({ userId, onBack, isOnline }) => {
     setCompletingId(taskId)
     try {
       if (!isOnline) {
-        addToOfflineQueue('task_complete', { taskId })
+        await addToOfflineQueue('task_complete', { taskId })
         setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'completed' } : t))
         setCompletingId(null)
         return
@@ -46,7 +46,7 @@ const TaskList = ({ userId, onBack, isOnline }) => {
     } catch (err) {
       console.error('Complete task error:', err)
       if (err.offline) {
-        addToOfflineQueue('task_complete', { taskId })
+        await addToOfflineQueue('task_complete', { taskId })
         setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'completed' } : t))
       }
     } finally {

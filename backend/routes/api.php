@@ -115,16 +115,17 @@ Route::middleware('auth:sanctum')->group(function () {
             ->where('type', 'plant');
     });
 
-    // Activities
+    // Activities (with rate limiting for write operations)
+    // NOTE: Farm access is verified at controller level (auto-determines from target or validates provided farm_id)
     Route::prefix('activities')->group(function () {
         Route::get('/', [ActivityController::class, 'index']);
-        Route::post('/', [ActivityController::class, 'store']);
-        Route::post('/batch', [ActivityController::class, 'storeBatch']);
+        Route::post('/', [ActivityController::class, 'store'])->middleware('throttle:api');
+        Route::post('/batch', [ActivityController::class, 'storeBatch'])->middleware('throttle:api');
         Route::get('/{id}', [ActivityController::class, 'show']);
     });
 
-    // Tasks
-    Route::prefix('tasks')->group(function () {
+    // Tasks (with rate limiting for write operations)
+    Route::prefix('tasks')->middleware('throttle:api')->group(function () {
         Route::get('/', [TaskController::class, 'index']);
         Route::post('/', [TaskController::class, 'store']);
         Route::get('/my', [TaskController::class, 'myTasks']);
@@ -134,8 +135,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{taskId}/assignment-status', [TaskController::class, 'updateAssignmentStatus']);
     });
 
-    // Problem Reports
-    Route::prefix('problem-reports')->group(function () {
+    // Problem Reports (with rate limiting for write operations)
+    Route::prefix('problem-reports')->middleware(['farm-access', 'throttle:api'])->group(function () {
         Route::get('/', [ProblemReportController::class, 'index']);
         Route::post('/', [ProblemReportController::class, 'store']);
         Route::get('/{id}', [ProblemReportController::class, 'show']);

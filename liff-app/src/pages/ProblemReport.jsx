@@ -56,7 +56,7 @@ const ProblemReport = ({ type, id, onBack, onSuccess, isOnline }) => {
 
     try {
       if (!isOnline) {
-        addToOfflineQueue('problem', reportData)
+        await addToOfflineQueue('problem', reportData)
         onSuccess()
         return
       }
@@ -72,7 +72,10 @@ const ProblemReport = ({ type, id, onBack, onSuccess, isOnline }) => {
       onSuccess()
     } catch (err) {
       console.error('Submit report error:', err)
-      if (err.offline) { addToOfflineQueue('problem', reportData); onSuccess() }
+      if (err.offline) {
+        await addToOfflineQueue('problem', reportData)
+        onSuccess()
+      }
       else setError('ไม่สามารถส่งรายงานได้ กรุณาลองใหม่')
     } finally { setLoading(false) }
   }

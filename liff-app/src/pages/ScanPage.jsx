@@ -15,10 +15,9 @@ const ScanPage = ({ type, id, onSelectAction }) => {
       setLoading(true)
       setError(null)
       try {
-        const scanResult = { type, plant_id: type === 'plant' ? id : null, plot_id: type === 'plot' ? id : null }
         const [targetRes, activitiesRes] = await Promise.all([
-          getTargetInfo(scanResult),
-          getActivities(scanResult, 5)
+          getTargetInfo(type, id),
+          getActivities(type, id, 5)
         ])
         setTarget(targetRes.data)
         setActivities(activitiesRes.data?.data || [])

@@ -26,7 +26,7 @@ export default function Tasks() {
 
   useEffect(() => {
     execute();
-    usersAPI.list().then((r) => setUsers(r.data || [])).catch(() => {});
+    usersAPI.list().then((r) => setUsers(r.data || [])).catch(() => setUsers([]));
   }, []);
 
   useEffect(() => { execute(); }, [filter]);
@@ -84,7 +84,7 @@ export default function Tasks() {
 
   const handleComplete = async (task) => {
     try { await tasksAPI.complete(task.id); execute(); }
-    catch (err) { setActionError('ไม่สามารถอัปเดตสถานะได้'); }
+    catch (err) { setActionError(err.response?.data?.message || 'ไม่สามารถอัปเดตสถานะได้'); }
   };
 
   const getStatusLabel = (s) => ({ pending: 'รอดำเนินการ', in_progress: 'กำลังทำ', completed: 'เสร็จแล้ว' }[s] || s);
@@ -131,10 +131,13 @@ export default function Tasks() {
         <div className="space-y-3">
           {tasks.map((task) => (
             <div key={task.id} className="card-padded flex items-start gap-3">
-              <button onClick={() => handleComplete(task)}
-                className={`mt-0.5 p-0.5 rounded-full flex-shrink-0 transition-colors ${
-                  task.status === 'completed' ? 'text-success' : 'text-gray-300 hover:text-success'}`}>
-                <CheckCircle size={18} />
+              <button
+                onClick={() => handleComplete(task)}
+                className={`mt-0.5 p-0.5 rounded-full flex-shrink-0 transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-green-600 ${
+                  task.status === 'completed' ? 'text-green-600' : 'text-gray-300 hover:text-green-600'}`}
+                aria-label={task.status === 'completed' ? 'งานเสร็จแล้ว' : 'ทำเครื่องหมายว่าเสร็จแล้ว'}
+              >
+                <CheckCircle size={18} aria-hidden="true" />
               </button>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap mb-0.5">
@@ -154,8 +157,8 @@ export default function Tasks() {
               </div>
               {isManager() && (
                 <div className="flex gap-0.5 flex-shrink-0">
-                  <button onClick={() => openEdit(task)} className="btn-icon"><Edit2 size={14} /></button>
-                  <button onClick={() => setDeleteTarget(task)} className="btn-icon hover:text-danger"><Trash2 size={14} /></button>
+                  <button onClick={() => openEdit(task)} className="btn-icon" aria-label="แก้ไขงาน"><Edit2 size={14} /></button>
+                  <button onClick={() => setDeleteTarget(task)} className="btn-icon hover:text-danger" aria-label="ลบงาน"><Trash2 size={14} /></button>
                 </div>
               )}
             </div>
