@@ -26,11 +26,24 @@ class TaskController extends ApiController
 
     /**
      * Store a newly created task.
+     * SECURITY: Verifies user has access to the farm before creating task.
      */
     public function store(TaskStoreRequest $request): JsonResponse
     {
         $data = $request->validated();
-        $data['created_by'] = $request->user()->id;
+        $user = $request->user();
+
+        // SECURITY: Verify user has access to the farm
+        $hasAccess = $user->role === 'super_admin' ||
+            \App\Models\Farm::where('id', $data['farm_id'])
+                ->whereHas('users', fn($q) => $q->where('users.id', $user->id))
+                ->exists();
+
+        if (!$hasAccess) {
+            return $this->error('Forbidden: You do not have access to this farm', 403);
+        }
+
+        $data['created_by'] = $user->id;
 
         $task = $this->taskRepository->create($data);
         return $this->success($task, 'Task created successfully', 201);
@@ -47,9 +60,21 @@ class TaskController extends ApiController
 
     /**
      * Update the specified task.
+     * SECURITY: Verifies user has access to the farm.
      */
     public function update(TaskUpdateRequest $request, int $id): JsonResponse
     {
+        $task = $this->taskRepository->getById($id);
+        $user = $request->user();
+
+        // SECURITY: Verify user has access to the farm
+        $hasAccess = $user->role === 'super_admin' ||
+            $task->farm->users()->where('users.id', $user->id)->exists();
+
+        if (!$hasAccess) {
+            return $this->error('Forbidden: You do not have access to this farm', 403);
+        }
+
         $task = $this->taskRepository->update($id, $request->validated());
         return $this->success($task, 'Task updated successfully');
     }
@@ -65,10 +90,33 @@ class TaskController extends ApiController
 
     /**
      * Update task assignment status.
+     * SECURITY: Only the assigned user OR a manager/owner of the farm can update assignment status.
      */
     public function updateAssignmentStatus(TaskAssignmentStatusRequest $request, int $taskId): JsonResponse
     {
         $validated = $request->validated();
+        $currentUser = $request->user();
+
+        $task = $this->taskRepository->getById($taskId);
+
+        // SECURITY: Verify the current user is either:
+        // 1. The assigned user themselves, OR
+        // 2. A manager/owner of the farm (has elevated permissions)
+        $isAssignedUser = $task->assignments->contains('user_id', $currentUser->id);
+        $isFarmManager = $currentUser->role === 'super_admin' ||
+            $task->farm->users()->where('users.id', $currentUser->id)
+                ->whereIn('farm_user.role', ['owner', 'manager'])
+                ->exists();
+
+        if (!$isAssignedUser && !$isFarmManager) {
+            return $this->error('Forbidden: You can only update your own task assignments', 403);
+        }
+
+        // Only the assigned user themselves can accept/reject/complete, managers can only update status
+        $restrictedStatuses = ['accepted', 'rejected', 'completed'];
+        if (!$isAssignedUser && in_array($validated['status'], $restrictedStatuses)) {
+            return $this->error('Forbidden: Only the assigned user can set this status', 403);
+        }
 
         $assignment = $this->taskRepository->updateAssignmentStatus(
             $taskId,

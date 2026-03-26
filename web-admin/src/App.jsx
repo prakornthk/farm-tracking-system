@@ -23,6 +23,7 @@ function App() {
           <Routes>
             {/* Public */}
             <Route path="/login" element={<Login />} />
+            <Route path="/login/callback" element={<Login />} />
 
             {/* Protected */}
             <Route

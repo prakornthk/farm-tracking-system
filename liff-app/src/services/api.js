@@ -4,23 +4,11 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'https://api.farm-system.examp
 
 const api = axios.create({
   baseURL: API_BASE,
-  timeout: 10000,
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json'
   }
 })
-
-// Request interceptor for adding auth token
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('liff_token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => Promise.reject(error)
-)
 
 // Response interceptor for offline handling
 api.interceptors.response.use(
@@ -32,6 +20,27 @@ api.interceptors.response.use(
     return Promise.reject(error)
   }
 )
+
+// ── Retry logic for network resilience ──────────────────────
+const MAX_RETRIES = 2
+const RETRY_DELAY_MS = 1000
+
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+
+const withRetry = async (fn, retries = MAX_RETRIES) => {
+  let lastError
+  for (let i = 0; i <= retries; i++) {
+    try {
+      return await fn()
+    } catch (err) {
+      lastError = err
+      // Only retry on network errors, not on HTTP 4xx/5xx
+      if (err.response || err.offline) throw err
+      if (i < retries) await sleep(RETRY_DELAY_MS * (i + 1))
+    }
+  }
+  throw lastError
+}
 
 // Activity Actions
 export const logActivity = async (data) => {

@@ -38,7 +38,20 @@ class ActivityController extends ApiController
 
         // Auto-determine farm_id from target if not provided
         if (!isset($data['farm_id'])) {
-            $data['farm_id'] = $this->getFarmIdFromTarget($data['activitable_type'], $data['activitable_id']);
+            $data['farm_id'] = $this->getFarmIdFromTarget(
+                $data['activitable_type'],
+                $data['activitable_id'],
+                $request->user()
+            );
+        } else {
+            // SECURITY: If farm_id is provided, verify user has access
+            $hasAccess = $request->user()->role === 'super_admin' ||
+                \App\Models\Farm::where('id', $data['farm_id'])
+                    ->whereHas('users', fn($q) => $q->where('users.id', $request->user()->id))
+                    ->exists();
+            if (!$hasAccess) {
+                return $this->error('Forbidden: You do not have access to this farm', 403);
+            }
         }
 
         $activity = $this->activityRepository->create($data);
@@ -60,8 +73,18 @@ class ActivityController extends ApiController
             if (!isset($activityData['farm_id'])) {
                 $activityData['farm_id'] = $this->getFarmIdFromTarget(
                     $activityData['activitable_type'],
-                    $activityData['activitable_id']
+                    $activityData['activitable_id'],
+                    $request->user()
                 );
+            } else {
+                // SECURITY: If farm_id is provided, verify user has access
+                $hasAccess = $request->user()->role === 'super_admin' ||
+                    \App\Models\Farm::where('id', $activityData['farm_id'])
+                        ->whereHas('users', fn($q) => $q->where('users.id', $request->user()->id))
+                        ->exists();
+                if (!$hasAccess) {
+                    return $this->error('Forbidden: You do not have access to this farm', 403);
+                }
             }
         }
 
@@ -88,11 +111,25 @@ class ActivityController extends ApiController
             return $this->error('Invalid target type', 400);
         }
 
-        // Verify target exists and get activities
+        $user = $request->user();
+
+        // Verify target exists and get farm_id
         if ($type === 'plot') {
-            Plot::findOrFail($id);
+            $plot = Plot::findOrFail($id);
+            $farmId = $plot->zone->farm_id;
         } else {
-            Plant::findOrFail($id);
+            $plant = Plant::findOrFail($id);
+            $farmId = $plant->plot->zone->farm_id;
+        }
+
+        // SECURITY: Verify user has access to this farm
+        $hasAccess = $user->role === 'super_admin' ||
+            \App\Models\Farm::where('id', $farmId)
+                ->whereHas('users', fn($q) => $q->where('users.id', $user->id))
+                ->exists();
+
+        if (!$hasAccess) {
+            return $this->error('Forbidden: You do not have access to this farm', 403);
         }
 
         $activities = $this->activityRepository->getByTarget($type, $id, $request);
@@ -100,14 +137,28 @@ class ActivityController extends ApiController
     }
 
     /**
-     * Get farm ID from target.
+     * Get farm ID from target and verify user has access.
      */
-    private function getFarmIdFromTarget(string $type, int $id): int
+    private function getFarmIdFromTarget(string $type, int $id, $user): int
     {
         if ($type === 'plot') {
-            return Plot::findOrFail($id)->zone->farm_id;
+            $plot = Plot::findOrFail($id);
+            $farmId = $plot->zone->farm_id;
+        } else {
+            $plant = Plant::findOrFail($id);
+            $farmId = $plant->plot->zone->farm_id;
         }
 
-        return Plant::findOrFail($id)->plot->zone->farm_id;
+        // SECURITY: Verify user has access to this farm
+        $hasAccess = $user->role === 'super_admin' ||
+            \App\Models\Farm::where('id', $farmId)
+                ->whereHas('users', fn($q) => $q->where('users.id', $user->id))
+                ->exists();
+
+        if (!$hasAccess) {
+            abort(403, 'Forbidden: You do not have access to this farm');
+        }
+
+        return $farmId;
     }
 }

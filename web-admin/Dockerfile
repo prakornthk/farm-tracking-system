@@ -3,7 +3,7 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files first (best caching)
 COPY package*.json ./
 
 # Install dependencies
@@ -18,11 +18,18 @@ RUN npm run build
 # Production stage - nginx
 FROM nginx:alpine
 
+# Install curl for healthcheck (removed after)
+RUN apk add --no-cache curl
+
 # Copy built assets
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Copy nginx SPA config
 COPY nginx.spa.conf /etc/nginx/conf.d/default.conf
+
+# Run as non-root user
+# nginx alpine uses 'nginx' user (uid 82)
+USER nginx
 
 EXPOSE 80
 

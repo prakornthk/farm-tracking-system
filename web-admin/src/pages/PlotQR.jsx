@@ -6,15 +6,15 @@ import { useApi } from '../hooks/useApi';
 import { plotsAPI } from '../services/api';
 import { LoadingSpinner, ErrorAlert } from '../components/Shared';
 
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
+  const escapeHtml = (str) => {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  };
 
 export default function PlotQR() {
   const { id: plotId } = useParams();
@@ -27,6 +27,13 @@ export default function PlotQR() {
   useEffect(() => {
     execute();
   }, [plotId]);
+
+  const safeSvgHtml = (rawHtml) => {
+    if (!rawHtml) return '';
+    return rawHtml
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  };
 
   const handlePrint = () => {
     const plotName = escapeHtml(plot?.name || `แปลง #${plotId}`);
@@ -46,7 +53,7 @@ export default function PlotQR() {
         </head>
         <body>
           <div id="plot-qr-svg" class="flex justify-center mb-4">
-            ${printRef.current.innerHTML}
+            ${safeSvgHtml(printRef.current.innerHTML)}
           </div>
           <h2>${plotName}</h2>
           ${plantType ? `<p>🌱 ${plantType}</p>` : ''}

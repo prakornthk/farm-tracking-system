@@ -28,9 +28,11 @@ services:
       dockerfile: Dockerfile
     container_name: farm-backend
     restart: unless-stopped
+    user: "82:82"
     environment:
       APP_ENV: ${APP_ENV:-production}
       APP_DEBUG: ${APP_DEBUG:-false}
+      APP_KEY: ${APP_KEY}
       APP_URL: ${APP_URL}
       DB_CONNECTION: mysql
       DB_HOST: mariadb
@@ -41,7 +43,6 @@ services:
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
     volumes:
-      - ./backend:/var/www
       - backend_storage:/var/www/storage
       - backend_bootstrap:/var/www/bootstrap/cache
     networks:
@@ -50,7 +51,7 @@ services:
       mariadb:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
+      test: ["CMD-SHELL", "ps aux | grep -v grep | grep 'php-fpm: master' > /dev/null || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -65,9 +66,6 @@ services:
     restart: unless-stopped
     environment:
       VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost/api}
-    volumes:
-      - ./web-admin:/app
-      - /app/node_modules
     networks:
       - farm-network
     healthcheck:
@@ -87,9 +85,6 @@ services:
     environment:
       VITE_LIFF_ID: ${LIFF_ID}
       VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost/api}
-    volumes:
-      - ./liff-app:/app
-      - /app/node_modules
     networks:
       - farm-network
     healthcheck:
@@ -117,7 +112,7 @@ services:
       - web-admin
       - liff-app
     healthcheck:
-      test: ["CMD", "nginx", "-t"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3

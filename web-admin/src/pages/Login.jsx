@@ -1,4 +1,5 @@
-import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Sprout } from 'lucide-react';
 
@@ -11,7 +12,29 @@ function generateState() {
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const code = searchParams.get('code');
+  const returnedState = searchParams.get('state');
 
+  // ── LINE OAuth Callback ────────────────────────────────────────────────
+  useEffect(() => {
+    if (!code || !returnedState) return;
+
+    const savedState = sessionStorage.getItem('oauth_state');
+    sessionStorage.removeItem('oauth_state'); // one-time use
+
+    if (!savedState || savedState !== returnedState) {
+      // CSRF detected — redirect to login without executing
+      navigate('/login', { replace: true });
+      return;
+    }
+
+    login(code)
+      .then(() => navigate('/dashboard', { replace: true }))
+      .catch(() => navigate('/login', { replace: true }));
+  }, [code, returnedState]);
+
+  // ── Normal login page ─────────────────────────────────────────────────
   const handleLineLogin = () => {
     const clientId = import.meta.env.VITE_LINE_CLIENT_ID || 'your-line-client-id';
     const redirectUri = encodeURIComponent(window.location.origin + '/login/callback');
