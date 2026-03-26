@@ -92,6 +92,5 @@ class Farm extends Model
     public function getPlantsCountAttribute(): int
     {
         return Plant::whereHas('plot.zone', fn($q) => $q->where('farm_id', $this->id))->count();
-        });
     }
 }
