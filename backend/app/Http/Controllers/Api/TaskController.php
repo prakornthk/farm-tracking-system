@@ -51,10 +51,21 @@ class TaskController extends ApiController
 
     /**
      * Display the specified task.
+     * SECURITY: Verifies user has access to the farm.
      */
     public function show(int $id): JsonResponse
     {
         $task = $this->taskRepository->getById($id);
+        $user = request()->user();
+
+        // SECURITY: Verify user has access to the farm
+        $hasAccess = $user->role === 'super_admin' ||
+            $task->farm->users()->where('users.id', $user->id)->exists();
+
+        if (!$hasAccess) {
+            return $this->error('Forbidden: You do not have access to this farm', 403);
+        }
+
         return $this->success($task, 'Task retrieved successfully');
     }
 
@@ -81,9 +92,24 @@ class TaskController extends ApiController
 
     /**
      * Remove the specified task.
+     * SECURITY: Only owner/manager of the farm can delete tasks.
      */
     public function destroy(int $id): JsonResponse
     {
+        $task = $this->taskRepository->getById($id);
+        $user = request()->user();
+
+        // SECURITY: Only owner/manager can delete tasks
+        $isFarmManager = $user->role === 'super_admin' ||
+            $task->farm->users()
+                ->where('users.id', $user->id)
+                ->whereIn('farm_user.role', ['owner', 'manager'])
+                ->exists();
+
+        if (!$isFarmManager) {
+            return $this->error('Forbidden: Only farm owner/manager can delete tasks', 403);
+        }
+
         $this->taskRepository->delete($id);
         return $this->success(null, 'Task deleted successfully');
     }

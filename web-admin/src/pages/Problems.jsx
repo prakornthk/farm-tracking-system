@@ -150,7 +150,7 @@ export default function Problems() {
                 <div>
                   <label htmlFor="problem-plot-id" className="label">แปลงที่เกี่ยวข้อง</label>
                   <input id="problem-plot-id" type="text" className="input" value={form.plot_id}
-                    onChange={(e) => setForm({ ...form, plot_id: e.target.value })}
+                    onChange={(e) => setForm({ ...form, plot_id: e.target.value.replace(/\s+/g, '').slice(0, 50) })}
                     placeholder="ID แปลง" />
                 </div>
               </div>

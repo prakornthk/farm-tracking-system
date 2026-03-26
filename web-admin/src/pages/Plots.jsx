@@ -114,16 +114,16 @@ export default function Plots() {
                     <button
                       onClick={() => openEdit(plot)}
                       className="p-1.5 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50"
-                      aria-label="แก้ไขแปลง"
+                      aria-label={`แก้ไขแปลง ${plot.name}`}
                     >
-                      <Edit2 size={16} />
+                      <Edit2 size={16} aria-hidden="true" />
                     </button>
                     <button
                       onClick={() => setDeleteTarget(plot)}
                       className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50"
-                      aria-label="ลบแปลง"
+                      aria-label={`ลบแปลง ${plot.name}`}
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={16} aria-hidden="true" />
                     </button>
                   </div>
                 )}

@@ -97,11 +97,11 @@ export default function Farms() {
                 </div>
                 {isManager() && (
                   <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => openEdit(farm)} className="btn-icon" aria-label="แก้ไขฟาร์ม">
-                      <Edit2 size={14} />
+                    <button onClick={() => openEdit(farm)} className="btn-icon" aria-label={`แก้ไขฟาร์ม ${farm.name}`}>
+                      <Edit2 size={14} aria-hidden="true" />
                     </button>
-                    <button onClick={() => setDeleteTarget(farm)} className="btn-icon hover:text-danger" aria-label="ลบฟาร์ม">
-                      <Trash2 size={14} />
+                    <button onClick={() => setDeleteTarget(farm)} className="btn-icon hover:text-red-600" aria-label={`ลบฟาร์ม ${farm.name}`}>
+                      <Trash2 size={14} aria-hidden="true" />
                     </button>
                   </div>
                 )}
