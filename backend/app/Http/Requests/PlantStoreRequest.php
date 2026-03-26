@@ -24,7 +24,7 @@ class PlantStoreRequest extends FormRequest
             'variety' => 'nullable|string|max:255',
             'planted_date' => 'nullable|date',
             'expected_harvest_date' => 'nullable|date|after_or_equal:planted_date',
-            'status' => 'nullable|in:seedling,vegetative,flowering,fruiting,harvested,dead,removed',
+            'status' => 'nullable|in:normal,problem,dead,harvested',
             'quantity' => 'nullable|integer|min:1',
             'notes' => 'nullable|string|max:2000',
         ];

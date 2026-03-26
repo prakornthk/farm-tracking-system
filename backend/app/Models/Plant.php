@@ -12,6 +12,11 @@ class Plant extends Model
 {
     use HasFactory, SoftDeletes;
 
+    /**
+     * Plant status values per spec.
+     */
+    const STATUSES = ['normal', 'problem', 'dead', 'harvested'];
+
     protected $fillable = [
         'plot_id',
         'name',
@@ -23,6 +28,9 @@ class Plant extends Model
         'status',
         'quantity',
         'notes',
+        'code',
+        'species',
+        'latest_image_url',
     ];
 
     protected $casts = [

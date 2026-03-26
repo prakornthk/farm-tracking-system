@@ -27,6 +27,7 @@ class Activity extends Model
         'yield_total_value',
         'metadata',
         'activity_date',
+        'image_url',
     ];
 
     protected $casts = [

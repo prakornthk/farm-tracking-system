@@ -13,6 +13,11 @@ class Plot extends Model
 {
     use HasFactory, SoftDeletes;
 
+    /**
+     * Plot status values per spec.
+     */
+    const STATUSES = ['active', 'inactive', 'harvested'];
+
     protected $fillable = [
         'zone_id',
         'name',
@@ -24,6 +29,12 @@ class Plot extends Model
         'status',
         'sort_order',
         'is_active',
+        'code',
+        'crop_type',
+        'total_plants',
+        'area',
+        'image_url',
+        'note',
     ];
 
     protected $casts = [

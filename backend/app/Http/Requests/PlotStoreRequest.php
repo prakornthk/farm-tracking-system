@@ -24,7 +24,7 @@ class PlotStoreRequest extends FormRequest
             'description' => 'nullable|string|max:1000',
             'size' => 'nullable|numeric|min:0',
             'size_unit' => 'nullable|string|in:sqm,rai,hectare',
-            'status' => 'nullable|in:empty,planted,growing,harvesting,fallow',
+            'status' => 'nullable|in:active,inactive,harvested',
             'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
         ];

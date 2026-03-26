@@ -44,6 +44,11 @@ class ProblemReport extends Model
     ];
 
     /**
+     * Problem types per spec.
+     */
+    const PROBLEM_TYPES = ['disease', 'pest', 'dead'];
+
+    /**
      * Statuses.
      */
     const STATUSES = [
