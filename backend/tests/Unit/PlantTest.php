@@ -59,7 +59,7 @@ class PlantTest extends TestCase
     public function test_activity_types_constant(): void
     {
         $types = [
-            'watering', 'fertilizing', 'pesticide', 'weeding',
+            'watering', 'fertilizing', 'pesticide', 'spraying', 'weeding',
             'pruning', 'harvesting', 'inspection', 'planting',
             'soil_preparation', 'other'
         ];

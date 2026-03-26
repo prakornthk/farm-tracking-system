@@ -34,6 +34,7 @@ class ActivityBatchStoreRequest extends FormRequest
             'activities.*.yield_price_per_unit' => 'nullable|numeric|min:0',
             'activities.*.metadata' => 'nullable|array',
             'activities.*.activity_date' => 'nullable|date',
+            'activities.*.image_url' => 'nullable|url|max:500',
         ];
     }
 

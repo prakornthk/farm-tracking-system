@@ -34,6 +34,9 @@ class PlantModelTest extends TestCase
         $this->assertContains('notes', $fillable);
         $this->assertContains('qr_code', $fillable);
         $this->assertContains('qr_code_data', $fillable);
+        $this->assertContains('code', $fillable);
+        $this->assertContains('species', $fillable);
+        $this->assertContains('latest_image_url', $fillable);
     }
 
     /** @test */
@@ -84,7 +87,7 @@ class PlantModelTest extends TestCase
     /** @test */
     public function plant_has_valid_statuses(): void
     {
-        $validStatuses = ['seedling', 'vegetative', 'flowering', 'fruiting', 'harvested', 'dead', 'removed'];
+        $validStatuses = ['normal', 'problem', 'dead', 'harvested'];
         $this->assertEquals($validStatuses, Plant::STATUSES);
     }
 

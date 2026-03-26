@@ -30,6 +30,7 @@ class ProblemReportUpdateRequest extends FormRequest
             'resolution' => 'nullable|string|max:2000',
             'image_url' => 'nullable|url|max:500',
             'metadata' => 'nullable|array',
+            'type' => 'nullable|in:' . implode(',', ProblemReport::PROBLEM_TYPES),
         ];
     }
 }

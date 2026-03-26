@@ -56,16 +56,16 @@ class PlantApiTest extends TestCase
         [$owner, $farm] = $this->actingAsFarmOwner();
         $zone = $this->createZone($farm);
         $plot = $this->createPlot($zone);
-        $seedling = $this->createPlant($plot, ['status' => 'seedling']);
-        $fruiting = $this->createPlant($plot, ['status' => 'fruiting']);
+        $normal = $this->createPlant($plot, ['status' => 'normal']);
+        $problem = $this->createPlant($plot, ['status' => 'problem']);
 
         $response = $this->withHeaders($this->authHeaders($owner))
-            ->getJson("/api/plots/{$plot->id}/plants?status=seedling");
+            ->getJson("/api/plots/{$plot->id}/plants?status=normal");
 
         $response->assertStatus(200);
         $data = $response->json('data');
         $this->assertEquals(1, count($data));
-        $this->assertEquals('seedling', $data[0]['status']);
+        $this->assertEquals('normal', $data[0]['status']);
     }
 
     /** @test */
@@ -103,7 +103,7 @@ class PlantApiTest extends TestCase
                 'variety' => 'Sweet Cherry',
                 'planted_date' => now()->toDateString(),
                 'expected_harvest_date' => now()->addDays(60)->toDateString(),
-                'status' => 'seedling',
+                'status' => 'normal',
                 'quantity' => 10,
                 'notes' => 'Planted in greenhouse',
             ]);
@@ -231,7 +231,7 @@ class PlantApiTest extends TestCase
         $response = $this->withHeaders($this->authHeaders($owner))
             ->putJson("/api/plants/{$plant->id}", [
                 'name' => 'Updated Plant Name',
-                'status' => 'vegetative',
+                'status' => 'normal',
                 'variety' => 'New Variety',
             ]);
 

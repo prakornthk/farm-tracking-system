@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('reporter_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('plot_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('plant_id')->nullable()->constrained()->onDelete('set null');
+            $table->enum('type', ['disease', 'pest', 'dead'])->nullable()->after('plant_id')->comment('Problem type per spec');
             $table->enum('severity', ['low', 'medium', 'high', 'critical'])->default('medium');
             $table->enum('status', ['reported', 'investigating', 'resolved', 'dismissed'])->default('reported');
             $table->string('title');
@@ -29,11 +30,12 @@ return new class extends Migration
             $table->timestamp('resolved_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
-            
+
             $table->index(['farm_id', 'severity']);
             $table->index(['farm_id', 'status']);
             $table->index('reporter_id');
             $table->index('severity');
+            $table->index('type');
         });
     }
 

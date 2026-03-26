@@ -18,6 +18,7 @@ class ProblemReportFactory extends Factory
             'reporter_id' => User::factory(),
             'plot_id' => null,
             'plant_id' => null,
+            'type' => 'disease',
             'severity' => 'medium',
             'status' => 'reported',
             'title' => fake()->sentence(4),

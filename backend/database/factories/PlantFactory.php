@@ -18,25 +18,35 @@ class PlantFactory extends Factory
             'variety' => fake()->word(),
             'planted_date' => now()->subDays(fake()->numberBetween(1, 30)),
             'expected_harvest_date' => now()->addDays(fake()->numberBetween(30, 120)),
-            'status' => 'vegetative',
+            'status' => 'normal',
             'quantity' => fake()->numberBetween(1, 100),
             'notes' => fake()->sentence(),
             'qr_code' => null,
             'qr_code_data' => null,
+            'code' => null,
+            'species' => null,
+            'latest_image_url' => null,
         ];
     }
 
-    public function seedling(): static
+    public function normal(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'seedling',
+            'status' => 'normal',
         ]);
     }
 
-    public function fruiting(): static
+    public function problem(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'fruiting',
+            'status' => 'problem',
+        ]);
+    }
+
+    public function dead(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'dead',
         ]);
     }
 

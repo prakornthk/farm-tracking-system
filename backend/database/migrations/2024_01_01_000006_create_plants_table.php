@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('qr_code_data')->nullable()->comment('Raw data encoded in QR');
             $table->date('planted_date')->nullable();
             $table->date('expected_harvest_date')->nullable();
-            $table->enum('status', ['seedling', 'vegetative', 'flowering', 'fruiting', 'harvested', 'dead', 'removed'])->default('seedling');
+            $table->enum('status', ['normal', 'problem', 'dead', 'harvested'])->default('normal');
             $table->integer('quantity')->default(1)->comment('Number of plants in this entry');
             $table->text('notes')->nullable();
             $table->timestamps();

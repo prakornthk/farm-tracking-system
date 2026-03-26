@@ -100,7 +100,7 @@ class DatabaseSeeder extends Seeder
             'description' => 'Tomato growing plot',
             'size' => 100,
             'size_unit' => 'sqm',
-            'status' => 'planted',
+            'status' => 'active',
             'sort_order' => 1,
             'is_active' => true,
         ]);
@@ -111,7 +111,7 @@ class DatabaseSeeder extends Seeder
             'description' => 'Lettuce growing plot',
             'size' => 50,
             'size_unit' => 'sqm',
-            'status' => 'growing',
+            'status' => 'active',
             'sort_order' => 2,
             'is_active' => true,
         ]);
@@ -123,7 +123,7 @@ class DatabaseSeeder extends Seeder
             'description' => 'Mango tree plot',
             'size' => 500,
             'size_unit' => 'sqm',
-            'status' => 'planted',
+            'status' => 'active',
             'sort_order' => 1,
             'is_active' => true,
         ]);
@@ -135,7 +135,7 @@ class DatabaseSeeder extends Seeder
             'variety' => 'Roma VF',
             'planted_date' => now()->subDays(30),
             'expected_harvest_date' => now()->addDays(60),
-            'status' => 'vegetative',
+            'status' => 'normal',
             'quantity' => 50,
         ]);
 
@@ -145,7 +145,7 @@ class DatabaseSeeder extends Seeder
             'variety' => 'Sweet Cherry',
             'planted_date' => now()->subDays(45),
             'expected_harvest_date' => now()->addDays(45),
-            'status' => 'flowering',
+            'status' => 'normal',
             'quantity' => 30,
         ]);
 
@@ -156,7 +156,7 @@ class DatabaseSeeder extends Seeder
             'variety' => 'Buttercrunch',
             'planted_date' => now()->subDays(20),
             'expected_harvest_date' => now()->addDays(25),
-            'status' => 'growing',
+            'status' => 'normal',
             'quantity' => 100,
         ]);
 
@@ -167,7 +167,7 @@ class DatabaseSeeder extends Seeder
             'variety' => 'Nam Doc Mai',
             'planted_date' => now()->subYears(3),
             'expected_harvest_date' => now()->addMonths(2),
-            'status' => 'vegetative',
+            'status' => 'normal',
             'quantity' => 10,
         ]);
 

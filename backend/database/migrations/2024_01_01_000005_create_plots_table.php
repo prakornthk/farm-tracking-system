@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('size_unit')->default('sqm')->comment('sqm, rai, or hectare');
             $table->string('qr_code')->nullable();
             $table->string('qr_code_data')->nullable()->comment('Raw data encoded in QR');
-            $table->enum('status', ['empty', 'planted', 'growing', 'harvesting', 'fallow'])->default('empty');
+            $table->enum('status', ['active', 'inactive', 'harvested'])->default('active');
             $table->integer('sort_order')->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();

@@ -37,6 +37,7 @@ class ActivityModelTest extends TestCase
         $this->assertContains('yield_total_value', $fillable);
         $this->assertContains('metadata', $fillable);
         $this->assertContains('activity_date', $fillable);
+        $this->assertContains('image_url', $fillable);
     }
 
     /** @test */

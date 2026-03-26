@@ -20,23 +20,36 @@ class PlotFactory extends Factory
             'size_unit' => 'sqm',
             'qr_code' => null,
             'qr_code_data' => null,
-            'status' => 'empty',
+            'status' => 'active',
             'sort_order' => fake()->numberBetween(1, 100),
             'is_active' => true,
+            'code' => null,
+            'crop_type' => null,
+            'total_plants' => 0,
+            'area' => null,
+            'image_url' => null,
+            'note' => null,
         ];
     }
 
-    public function planted(): static
+    public function active(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'planted',
+            'status' => 'active',
         ]);
     }
 
-    public function growing(): static
+    public function inactive(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'growing',
+            'status' => 'inactive',
+        ]);
+    }
+
+    public function harvested(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'harvested',
         ]);
     }
 }

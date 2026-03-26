@@ -28,6 +28,7 @@ class ProblemReportModelTest extends TestCase
         $this->assertContains('reporter_id', $fillable);
         $this->assertContains('plot_id', $fillable);
         $this->assertContains('plant_id', $fillable);
+        $this->assertContains('type', $fillable);
         $this->assertContains('severity', $fillable);
         $this->assertContains('status', $fillable);
         $this->assertContains('title', $fillable);
@@ -84,5 +85,12 @@ class ProblemReportModelTest extends TestCase
     {
         $expected = ['reported', 'investigating', 'resolved', 'dismissed'];
         $this->assertEquals($expected, ProblemReport::STATUSES);
+    }
+
+    /** @test */
+    public function problem_report_has_valid_problem_types(): void
+    {
+        $expected = ['disease', 'pest', 'dead'];
+        $this->assertEquals($expected, ProblemReport::PROBLEM_TYPES);
     }
 }

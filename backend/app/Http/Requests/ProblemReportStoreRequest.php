@@ -24,6 +24,7 @@ class ProblemReportStoreRequest extends FormRequest
             'farm_id' => 'required|exists:farms,id',
             'plot_id' => 'nullable|exists:plots,id',
             'plant_id' => 'nullable|exists:plants,id',
+            'type' => 'nullable|in:' . implode(',', ProblemReport::PROBLEM_TYPES),
             'severity' => 'nullable|in:' . implode(',', ProblemReport::SEVERITIES),
             'title' => 'required|string|max:255',
             'description' => 'required|string|max:5000',

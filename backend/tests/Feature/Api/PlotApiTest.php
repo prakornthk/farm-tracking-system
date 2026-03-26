@@ -55,16 +55,16 @@ class PlotApiTest extends TestCase
     {
         [$owner, $farm] = $this->actingAsFarmOwner();
         $zone = $this->createZone($farm);
-        $plantedPlot = $this->createPlot($zone, ['status' => 'planted']);
-        $emptyPlot = $this->createPlot($zone, ['status' => 'empty']);
+        $activePlot = $this->createPlot($zone, ['status' => 'active']);
+        $inactivePlot = $this->createPlot($zone, ['status' => 'inactive']);
 
         $response = $this->withHeaders($this->authHeaders($owner))
-            ->getJson("/api/zones/{$zone->id}/plots?status=planted");
+            ->getJson("/api/zones/{$zone->id}/plots?status=active");
 
         $response->assertStatus(200);
         $data = $response->json('data');
         $this->assertEquals(1, count($data));
-        $this->assertEquals('planted', $data[0]['status']);
+        $this->assertEquals('active', $data[0]['status']);
     }
 
     /** @test */
@@ -100,7 +100,7 @@ class PlotApiTest extends TestCase
                 'description' => 'Tomato area',
                 'size' => 100,
                 'size_unit' => 'sqm',
-                'status' => 'planted',
+                'status' => 'active',
                 'sort_order' => 1,
             ]);
 
@@ -219,7 +219,7 @@ class PlotApiTest extends TestCase
         $response = $this->withHeaders($this->authHeaders($owner))
             ->putJson("/api/plots/{$plot->id}", [
                 'name' => 'Updated Plot Name',
-                'status' => 'growing',
+                'status' => 'active',
                 'size' => 200,
             ]);
 
@@ -235,7 +235,7 @@ class PlotApiTest extends TestCase
         $this->assertDatabaseHas('plots', [
             'id' => $plot->id,
             'name' => 'Updated Plot Name',
-            'status' => 'growing',
+            'status' => 'active',
         ]);
     }
 

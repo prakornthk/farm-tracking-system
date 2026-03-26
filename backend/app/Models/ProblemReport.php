@@ -16,6 +16,7 @@ class ProblemReport extends Model
         'reporter_id',
         'plot_id',
         'plant_id',
+        'type',
         'severity',
         'status',
         'title',

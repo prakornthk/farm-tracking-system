@@ -36,6 +36,7 @@ class ActivityFactory extends Factory
             'yield_total_value' => null,
             'metadata' => null,
             'activity_date' => now(),
+            'image_url' => null,
         ];
     }
 

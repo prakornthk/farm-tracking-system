@@ -35,6 +35,12 @@ class PlotModelTest extends TestCase
         $this->assertContains('status', $fillable);
         $this->assertContains('sort_order', $fillable);
         $this->assertContains('is_active', $fillable);
+        $this->assertContains('code', $fillable);
+        $this->assertContains('crop_type', $fillable);
+        $this->assertContains('total_plants', $fillable);
+        $this->assertContains('area', $fillable);
+        $this->assertContains('image_url', $fillable);
+        $this->assertContains('note', $fillable);
     }
 
     /** @test */
@@ -95,7 +101,7 @@ class PlotModelTest extends TestCase
     /** @test */
     public function plot_has_valid_statuses(): void
     {
-        $validStatuses = ['empty', 'planted', 'growing', 'harvesting', 'fallow'];
+        $validStatuses = ['active', 'inactive', 'harvested'];
         $this->assertEquals($validStatuses, Plot::STATUSES);
     }
 }

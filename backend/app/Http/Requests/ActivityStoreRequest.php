@@ -33,6 +33,7 @@ class ActivityStoreRequest extends FormRequest
             'yield_price_per_unit' => 'nullable|numeric|min:0',
             'metadata' => 'nullable|array',
             'activity_date' => 'nullable|date',
+            'image_url' => 'nullable|url|max:500',
         ];
     }
 
