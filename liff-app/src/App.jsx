@@ -4,6 +4,7 @@ import useOffline from './hooks/useOffline'
 import Header from './components/Header'
 import LoginPage from './pages/LoginPage'
 import SuccessPage from './pages/SuccessPage'
+import { loginWithLineAccessToken } from './services/api'
 
 // Lazy-load pages for code splitting — reduces initial bundle
 const LazyScanPage      = React.lazy(() => import('./pages/ScanPage'))
@@ -32,6 +33,31 @@ const App = () => {
 
   const { liff, isLoggedIn, isReady, profile, error: liffError, login } = useLiff()
   const { isOnline, pendingCount } = useOffline()
+  const authSyncRef = useRef(false)
+
+  useEffect(() => {
+    // #region agent log
+    fetch('http://localhost:7352/ingest/67de65b0-b786-4529-b216-6d987234dbf1',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f86896'},body:JSON.stringify({sessionId:'f86896',runId:'initial',hypothesisId:'H3',location:'liff-app/src/App.jsx:39',message:'App auth state snapshot',data:{isReady,isLoggedIn,hasProfile:!!profile,profileUserId:profile?.userId||null,liffError:liffError||null},timestamp:Date.now()})}).catch(()=>{})
+    // #endregion
+  }, [isReady, isLoggedIn, profile, liffError])
+
+  useEffect(() => {
+    const syncBackendAuth = async () => {
+      if (!isReady || !isLoggedIn || !liff || authSyncRef.current) return
+      const accessToken = typeof liff.getAccessToken === 'function' ? liff.getAccessToken() : null
+      if (!accessToken) return
+      authSyncRef.current = true
+      // #region agent log
+      fetch('http://localhost:7352/ingest/67de65b0-b786-4529-b216-6d987234dbf1',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f86896'},body:JSON.stringify({sessionId:'f86896',runId:'post-fix',hypothesisId:'H6',location:'liff-app/src/App.jsx:53',message:'Trigger backend auth sync',data:{hasAccessToken:!!accessToken},timestamp:Date.now()})}).catch(()=>{})
+      // #endregion
+      try {
+        await loginWithLineAccessToken(accessToken)
+      } catch (e) {
+        authSyncRef.current = false
+      }
+    }
+    syncBackendAuth()
+  }, [isReady, isLoggedIn, liff])
 
   // Stable callbacks — all useCallback chains to avoid stale closures
   const handleSelectAction = useCallback((action) => setSelectedAction(action), [])

@@ -23,13 +23,17 @@ class AuthController extends ApiController
     {
         $request->validate([
             'code' => 'required|string',
+            'redirect_uri' => 'nullable|url',
         ]);
+
+        // Redirect URI used for code exchange must match the URI from authorize step.
+        $redirectUri = $request->input('redirect_uri', config('services.line.redirect'));
 
         // Exchange authorization code for access token
         $lineTokenResponse = Http::asForm()->post('https://api.line.me/oauth2/v2.1/token', [
             'grant_type' => 'authorization_code',
             'code' => $request->input('code'),
-            'redirect_uri' => config('services.line.redirect'),
+            'redirect_uri' => $redirectUri,
             'client_id' => config('services.line.client_id'),
             'client_secret' => config('services.line.client_secret'),
         ]);
@@ -41,7 +45,12 @@ class AuthController extends ApiController
         $tokenData = $lineTokenResponse->json();
 
         // Get LINE user profile
-        $lineProfileResponse = Http::withToken($tokenData['id_token'])
+        $lineAccessToken = $tokenData['access_token'] ?? null;
+        if (!$lineAccessToken) {
+            return $this->error('LINE token exchange did not return access token', 401);
+        }
+
+        $lineProfileResponse = Http::withToken($lineAccessToken)
             ->get('https://api.line.me/v2/profile');
 
         if (!$lineProfileResponse->successful()) {

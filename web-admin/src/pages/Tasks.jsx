@@ -26,7 +26,7 @@ export default function Tasks() {
 
   useEffect(() => {
     execute();
-    usersAPI.list().then((r) => setUsers(r.data || [])).catch(() => setUsers([]));
+    usersAPI.list().then((r) => setUsers(r.data?.data || [])).catch(() => setUsers([]));
   }, []);
 
   useEffect(() => { execute(); }, [filter]);

@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react'
 import Loading from '../components/Loading'
 import { getTasks, completeTask, addToOfflineQueue } from '../services/api'
 
+const debugLog = (payload) => {
+  // #region agent log
+  fetch('http://localhost:7352/ingest/67de65b0-b786-4529-b216-6d987234dbf1',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f86896'},body:JSON.stringify({sessionId:'f86896',runId:'initial',timestamp:Date.now(),...payload})}).catch(()=>{})
+  // #endregion
+}
+
 const TYPE_ICONS = {
   plant: { icon: '🌿', bg: 'var(--color-primary-bg)' },
   plot:  { icon: '🗺️', bg: 'var(--color-info-bg)' }
@@ -27,8 +33,34 @@ const TaskList = ({ userId, onBack, isOnline }) => {
 
     try {
       const res = await getTasks(userId)
+      // #region agent log
+      debugLog({
+        hypothesisId: 'H4',
+        location: 'liff-app/src/pages/TaskList.jsx:37',
+        message: 'Tasks API response shape',
+        data: {
+          userId: userId || null,
+          isArrayResData: Array.isArray(res?.data),
+          hasNestedDataArray: Array.isArray(res?.data?.data),
+          topLevelKeys: res?.data ? Object.keys(res.data).slice(0, 6) : []
+        }
+      })
+      // #endregion
       setTasks(res.data || [])
     } catch (err) {
+      // #region agent log
+      debugLog({
+        hypothesisId: 'H5',
+        location: 'liff-app/src/pages/TaskList.jsx:50',
+        message: 'Fetch tasks failed',
+        data: {
+          userId: userId || null,
+          status: err?.response?.status || null,
+          message: err?.response?.data?.message || err?.message || null,
+          offline: !!err?.offline
+        }
+      })
+      // #endregion
       console.error('Fetch tasks error:', err)
       if (err.offline) {
         setTasks([

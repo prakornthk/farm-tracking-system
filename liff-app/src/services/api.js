@@ -1,6 +1,27 @@
 import axios from 'axios'
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://api.farm-system.example.com'
+const envApiBase = import.meta.env.VITE_API_BASE
+const API_BASE = typeof envApiBase === 'string' && envApiBase.startsWith('/api') ? envApiBase : '/api'
+const DEBUG_ENDPOINT = 'http://localhost:7352/ingest/67de65b0-b786-4529-b216-6d987234dbf1'
+const DEBUG_SESSION_ID = 'f86896'
+const AUTH_TOKEN_KEY = 'liff_auth_token'
+
+const debugLog = (payload) => {
+  fetch(DEBUG_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': DEBUG_SESSION_ID },
+    body: JSON.stringify({ sessionId: DEBUG_SESSION_ID, runId: 'initial', timestamp: Date.now(), ...payload })
+  }).catch(() => {})
+}
+
+// #region agent log
+debugLog({
+  hypothesisId: 'H1',
+  location: 'liff-app/src/services/api.js:16',
+  message: 'LIFF API base initialized',
+  data: { apiBase: API_BASE }
+})
+// #endregion
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -10,16 +31,86 @@ const api = axios.create({
   }
 })
 
+const getStoredToken = () => localStorage.getItem(AUTH_TOKEN_KEY)
+
+export const setAuthToken = (token) => {
+  if (token) {
+    localStorage.setItem(AUTH_TOKEN_KEY, token)
+  } else {
+    localStorage.removeItem(AUTH_TOKEN_KEY)
+  }
+}
+
 // Response interceptor for offline handling
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // #region agent log
+    debugLog({
+      hypothesisId: 'H2',
+      location: 'liff-app/src/services/api.js:34',
+      message: 'API response error intercepted',
+      data: {
+        url: error?.config?.url || null,
+        method: error?.config?.method || null,
+        status: error?.response?.status || null,
+        responseMessage: error?.response?.data?.message || null,
+        offline: !navigator.onLine
+      }
+    })
+    // #endregion
     if (!navigator.onLine) {
       return Promise.reject({ offline: true, message: 'ไม่มีการเชื่อมต่ออินเทอร์เน็ต' })
     }
     return Promise.reject(error)
   }
 )
+
+api.interceptors.request.use((config) => {
+  const token = getStoredToken()
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  // #region agent log
+  debugLog({
+    hypothesisId: 'H3',
+    location: 'liff-app/src/services/api.js:54',
+    message: 'API request sent',
+    data: {
+      baseURL: config.baseURL || null,
+      url: config.url || null,
+      method: config.method || null,
+      hasAuthHeader: !!config.headers?.Authorization
+    }
+  })
+  // #endregion
+  return config
+})
+
+export const loginWithLineAccessToken = async (accessToken) => {
+  // #region agent log
+  debugLog({
+    hypothesisId: 'H6',
+    location: 'liff-app/src/services/api.js:89',
+    message: 'Start backend auth exchange',
+    data: { hasAccessToken: !!accessToken }
+  })
+  // #endregion
+  const res = await api.post('/auth/line/login', { access_token: accessToken })
+  const token = res?.data?.data?.token || null
+  if (token) {
+    setAuthToken(token)
+  }
+  // #region agent log
+  debugLog({
+    hypothesisId: 'H6',
+    location: 'liff-app/src/services/api.js:101',
+    message: 'Backend auth exchange result',
+    data: { statusOk: !!res?.data?.success, hasApiToken: !!token }
+  })
+  // #endregion
+  return res
+}
 
 // ── Retry logic for network resilience ──────────────────────
 const MAX_RETRIES = 2

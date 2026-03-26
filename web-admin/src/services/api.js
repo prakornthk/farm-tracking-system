@@ -35,7 +35,7 @@ api.interceptors.response.use(
 
 // Auth
 export const authAPI = {
-  lineLogin: (code) => api.post('/auth/line', { code }),
+  lineLogin: (code, redirectUri) => api.post('/auth/line/callback', { code, redirect_uri: redirectUri }),
   getProfile: () => api.get('/auth/profile'),
   logout: () => api.post('/auth/logout'),
 };
@@ -90,11 +90,11 @@ export const tasksAPI = {
 
 // Problems
 export const problemsAPI = {
-  list: (params) => api.get('/problems', { params }),
-  get: (id) => api.get(`/problems/${id}`),
-  create: (data) => api.post('/problems', data),
-  update: (id, data) => api.put(`/problems/${id}`, data),
-  delete: (id) => api.delete(`/problems/${id}`),
+  list: (params) => api.get('/problem-reports', { params }),
+  get: (id) => api.get(`/problem-reports/${id}`),
+  create: (data) => api.post('/problem-reports', data),
+  update: (id, data) => api.put(`/problem-reports/${id}`, data),
+  delete: (id) => api.delete(`/problem-reports/${id}`),
 };
 
 // Users

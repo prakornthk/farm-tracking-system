@@ -29,7 +29,8 @@ export default function Login() {
       return;
     }
 
-    login(code)
+    const redirectUri = `${window.location.origin}/login/callback`;
+    login(code, redirectUri)
       .then(() => navigate('/dashboard', { replace: true }))
       .catch(() => navigate('/login', { replace: true }));
   }, [code, returnedState]);

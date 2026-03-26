@@ -84,21 +84,29 @@ class UserRepository implements UserRepositoryInterface
     public function findOrCreateByLine(array $lineUser)
     {
         return DB::transaction(function () use ($lineUser) {
-            $user = User::where('line_user_id', $lineUser['user_id'])->first();
+            $lineUserId = $lineUser['user_id'] ?? $lineUser['userId'] ?? null;
+            $displayName = $lineUser['display_name'] ?? $lineUser['displayName'] ?? null;
+            $pictureUrl = $lineUser['picture_url'] ?? $lineUser['pictureUrl'] ?? null;
+
+            if (!$lineUserId) {
+                throw new \InvalidArgumentException('LINE user id is missing from profile payload.');
+            }
+
+            $user = User::where('line_user_id', $lineUserId)->first();
 
             if (!$user) {
                 $user = User::create([
-                    'line_user_id' => $lineUser['user_id'],
-                    'line_display_name' => $lineUser['display_name'] ?? null,
-                    'line_picture_url' => $lineUser['picture_url'] ?? null,
-                    'name' => $lineUser['display_name'] ?? 'LINE User',
+                    'line_user_id' => $lineUserId,
+                    'line_display_name' => $displayName,
+                    'line_picture_url' => $pictureUrl,
+                    'name' => $displayName ?? 'LINE User',
                     'role' => 'worker', // Default role for new LINE users
                 ]);
             } else {
                 // Update LINE info if changed
                 $user->update([
-                    'line_display_name' => $lineUser['display_name'] ?? $user->line_display_name,
-                    'line_picture_url' => $lineUser['picture_url'] ?? $user->line_picture_url,
+                    'line_display_name' => $displayName ?? $user->line_display_name,
+                    'line_picture_url' => $pictureUrl ?? $user->line_picture_url,
                 ]);
             }
 

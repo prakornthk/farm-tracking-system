@@ -11,14 +11,28 @@ export function AuthProvider({ children }) {
     const stored = localStorage.getItem('user');
     const token = localStorage.getItem('token');
     if (stored && token) {
-      setUser(JSON.parse(stored));
+      try {
+        const parsedUser = JSON.parse(stored);
+        if (parsedUser && typeof parsedUser === 'object') {
+          setUser(parsedUser);
+        } else {
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+        }
+      } catch (e) {
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+      }
     }
     setLoading(false);
   }, []);
 
-  const login = async (code) => {
-    const res = await authAPI.lineLogin(code);
-    const { token, user: userData } = res.data;
+  const login = async (code, redirectUri) => {
+    const res = await authAPI.lineLogin(code, redirectUri);
+    const { token, user: userData } = res.data?.data || {};
+    if (!token || !userData) {
+      throw new Error('Invalid login response');
+    }
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);

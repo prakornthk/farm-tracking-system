@@ -23,8 +23,12 @@ export function useApi(apiFn, deps = []) {
     setError(null);
     try {
       const res = await apiFnRef.current(...args);
-      setData(res.data);
-      return res.data;
+      const payload = res?.data;
+      const normalizedData = payload && Object.prototype.hasOwnProperty.call(payload, 'data')
+        ? payload.data
+        : payload;
+      setData(normalizedData);
+      return normalizedData;
     } catch (err) {
       // Ignore abort errors (component unmounted mid-request)
       if (err.name === 'AbortError' || err?.code === 'ERR_CANCELED') {
