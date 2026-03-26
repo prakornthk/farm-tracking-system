@@ -6,40 +6,34 @@ import { dashboardAPI } from '../services/api';
 import { LoadingSpinner, ErrorAlert } from '../components/Shared';
 
 export default function Dashboard() {
-  const { data, loading, error, execute } = useApi(dashboardAPI.stats);
+  const { data, loading, error, execute } = useApi(() => dashboardAPI.todayStats());
 
   useEffect(() => {
     execute();
   }, []);
 
   const stats = data || {
-    total_plants: 0,
-    plant_status_breakdown: [],
-    total_plots: 0,
-    today_tasks: 0,
+    activities_today: 0,
+    pending_tasks: 0,
     completed_tasks_today: 0,
+    overdue_tasks: 0,
+    open_problems: 0,
+    my_tasks_today: 0,
   };
 
   const cards = [
     {
-      label: 'จำนวนต้นไม้',
-      value: stats.total_plants,
+      label: 'กิจกรรมวันนี้',
+      value: stats.activities_today,
       icon: Sprout,
       color: 'bg-green-50 text-green-600',
       link: '/farms',
     },
     {
-      label: 'จำนวนแปลง',
-      value: stats.total_plots,
-      icon: Grid3x3,
-      color: 'bg-blue-50 text-blue-600',
-      link: '/farms',
-    },
-    {
-      label: 'งานวันนี้',
-      value: stats.today_tasks,
+      label: 'งานค้าง',
+      value: stats.pending_tasks,
       icon: ClipboardList,
-      color: 'bg-orange-50 text-orange-600',
+      color: 'bg-blue-50 text-blue-600',
       link: '/tasks',
     },
     {
@@ -48,6 +42,13 @@ export default function Dashboard() {
       icon: CheckCircle2,
       color: 'bg-emerald-50 text-emerald-600',
       link: '/tasks',
+    },
+    {
+      label: 'ปัญหาเปิด',
+      value: stats.open_problems,
+      icon: AlertTriangle,
+      color: 'bg-orange-50 text-orange-600',
+      link: '/problems',
     },
   ];
 

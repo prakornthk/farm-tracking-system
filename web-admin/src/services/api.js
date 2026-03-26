@@ -108,7 +108,8 @@ export const usersAPI = {
 
 // Dashboard
 export const dashboardAPI = {
-  stats: () => api.get('/dashboard/stats'),
+  metrics: (params) => api.get('/dashboard/metrics', { params }),
+  todayStats: () => api.get('/dashboard/today'),
 };
 
 export default api;

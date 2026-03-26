@@ -1,0 +1,13 @@
+.git
+.gitignore
+.env
+.env.*
+*.md
+vendor/
+node_modules/
+storage/*.key
+storage/logs/*
+bootstrap/cache/*
+!/storage/logs/.gitkeep
+!/bootstrap/cache/.gitkeep
+tests/
